@@ -11,6 +11,9 @@ import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
 import { Onboarding } from '@/components/Onboarding'
 import { NotificationBanner } from '@/components/Notifications'
 import { AITrading } from '@/components/AITrading'
+import { MarketFilters } from '@/components/MarketFilters'
+import { ReferralSystem } from '@/components/ReferralSystem'
+import { TrustTransparency } from '@/components/TrustTransparency'
 
 export default function Home() {
   const { user, isLoading, isInWorldApp, verifyWorldID } = useMiniKit()
@@ -112,6 +115,8 @@ export default function Home() {
       <div className="px-4 max-w-lg mx-auto w-full">
         <Portfolio />
         <AITrading isEnabled={aiTradingEnabled} onToggle={setAiTradingEnabled} />
+        <ReferralSystem />
+        <TrustTransparency />
       </div>
 
       {/* Swipe Instructions */}
@@ -125,6 +130,11 @@ export default function Home() {
             YES <span className="text-[var(--accent-yes)]">→</span>
           </span>
         </div>
+      </div>
+
+      {/* Market Filters */}
+      <div className="px-4 max-w-lg mx-auto w-full mb-4">
+        <MarketFilters onFilterChange={(f) => console.log('Filters:', f)} />
       </div>
 
       {/* Card Stack */}
