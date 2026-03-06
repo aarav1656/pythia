@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { MiniKit } from '@worldcoin/minikit-js'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { CONTRACTS, PYTHIA_ABI } from '@/lib/contracts'
 
 interface User {
   address: string | null
@@ -16,6 +18,11 @@ export function useMiniKit() {
     isInWorldApp: false,
   })
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Wagmi hooks for browser wallet
+  const { address: walletAddress, isConnected } = useAccount()
+  const { writeContractAsync, data: hash, isPending } = useWriteContract()
+  const { isConfirmed } = useWaitForTransactionReceipt({ hash })
 
   useEffect(() => {
     // Check if running in World App
@@ -40,10 +47,18 @@ export function useMiniKit() {
         }
       }
       checkUser()
+    } else if (isConnected && walletAddress) {
+      // Browser wallet connected
+      setUser({
+        address: walletAddress,
+        isVerified: false,
+        isInWorldApp: false,
+      })
+      setIsLoading(false)
     } else {
       setIsLoading(false)
     }
-  }, [])
+  }, [isConnected, walletAddress])
 
   const verifyWorldID = useCallback(async (action: string) => {
     if (!MiniKit.isInstalled()) {
@@ -63,6 +78,43 @@ export function useMiniKit() {
       throw e
     }
   }, [])
+
+  const placeBet = useCallback(async (
+    marketId: number,
+    isYes: boolean,
+    nullifier: string
+  ) => {
+    const value = '0x0' // ETH value in hex
+    
+    try {
+      if (MiniKit.isInstalled()) {
+        // Use World App
+        const { finalPayload } = await MiniKit.sendTransaction({
+          transaction: [{
+            to: CONTRACTS.pythia,
+            value,
+            data: '0x', // Would encode function call
+          }]
+        })
+        return finalPayload
+      } else if (isConnected) {
+        // Use browser wallet
+        const tx = await writeContractAsync({
+          address: CONTRACTS.pythia,
+          abi: PYTHIA_ABI,
+          functionName: 'placeBet',
+          args: [BigInt(marketId), isYes, nullifier as `0x${string}`],
+          value: BigInt(0.01 * 1e18), // 0.01 ETH
+        })
+        return tx
+      } else {
+        throw new Error('No wallet connected')
+      }
+    } catch (e) {
+      console.error('Bet failed:', e)
+      throw e
+    }
+  }, [isConnected, writeContractAsync])
 
   const sendTransaction = useCallback(async (
     to: string,
@@ -96,7 +148,11 @@ export function useMiniKit() {
     isLoading,
     verifyWorldID,
     sendTransaction,
+    placeBet,
     isInWorldApp: MiniKit.isInstalled(),
+    isWalletConnected: isConnected,
+    isTransactionPending: isPending,
+    isTransactionConfirmed: isConfirmed,
   }
 }
 
