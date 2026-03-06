@@ -1,8 +1,8 @@
-# Pythia Sybil-Resistant Private Prediction Markets
+# Pythia - Sybil-Resistant Private Prediction Markets
 
 > **"The prediction market where every person matters equally, and your bets stay private."**
 
-Pythia is a prediction market platform where **World ID ensures 1-person-1-bet** (no whale manipulation), **ACE private transfers** keep bets and payouts confidential, and **AI resolves markets** using verified real-world data — all powered by **Chainlink CRE**.
+Pythia is a prediction market platform where **World ID ensures 1-person-1-bet** (no whale manipulation), **ACE private transfers** keep bets and payouts confidential, and **AI resolves markets** using verified real-world data all powered by **Chainlink CRE**.
 
 ## Problem
 
