@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MiniKit } from '@worldcoin/minikit-js'
-import { formatAddress } from './useMiniKit'
+import { formatAddress } from '@/hooks/useMiniKit'
 import { Trophy, TrendingUp, TrendingDown, Share2, Wallet, ExternalLink } from 'lucide-react'
 
 interface LeaderboardEntry {
@@ -52,8 +52,8 @@ export function Portfolio() {
         }
     }, [])
 
-    const totalValue = portfolio.reduce((sum, bet => sum + bet.amount, 0)
-    const totalPotential = portfolio.reduce((sum, bet => sum + bet.potentialPayout, 0)
+    const totalValue = portfolio.reduce((sum, bet) => sum + bet.amount, 0)
+    const totalPotential = portfolio.reduce((sum, bet) => sum + bet.potentialPayout, 0)
 
     const shareToX = async (bet: BetPosition) => {
         const text = `I just bet ${bet.amount} ETH on "${bet.question}" on Pythia! 🧙‍♂️\n\nSwipe right for YES, left for NO 👉\n\n#PredictionMarket #Web3 #Chainlink`

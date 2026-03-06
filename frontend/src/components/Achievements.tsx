@@ -110,8 +110,8 @@ export function Achievements() {
     const [achievements] = useState<Achievement[]>(ACHIEVEMENTS)
     const [showAll, setShowAll] = useState(false)
     
-    const unlockedCount = achievements.filter(a => a.unlocked const totalRewards).length
-    = achievements
+    const unlockedCount = achievements.filter(a => a.unlocked).length
+    const totalRewards = achievements
         .filter(a => !a.unlocked)
         .reduce((sum, a) => {
             const rewardNum = parseFloat(a.reward)
