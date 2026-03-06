@@ -1,30 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0f;
-  --background-elevated: #12121a;
-  --foreground: #f0f0f5;
-  --foreground-muted: #71717a;
-  --card-bg: #14141e;
-  --card-border: rgba(255, 255, 255, 0.08);
-  --accent-yes: #22c55e;
-  --accent-no: #ef4444;
-  --accent-purple: #8b5cf6;
-  --accent-blue: #3b82f6;
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-tertiary: #52525b;
+  --bg: #050508;
+  --bg-panel: #0a0a12;
+  --bg-card: #0d0d18;
+  --neon-green: #00ff88;
+  --neon-magenta: #ff00ff;
+  --neon-amber: #ffaa00;
+  --neon-cyan: #00e5ff;
+  --neon-red: #ff2244;
+  --border-dim: rgba(0, 255, 136, 0.18);
+  --border-bright: rgba(0, 255, 136, 0.55);
+  --text-primary: #e8ffe8;
+  --text-secondary: #7aff9a;
+  --text-dim: #2a6640;
+  --text-amber: #ffaa00;
+  --font-retro: 'Share Tech Mono', monospace;
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-vt: 'VT323', monospace;
+  /* legacy compat */
+  --background: var(--bg);
+  --background-elevated: var(--bg-panel);
+  --foreground: var(--text-primary);
+  --card-bg: var(--bg-card);
+  --card-border: var(--border-dim);
+  --accent-yes: var(--neon-green);
+  --accent-no: var(--neon-red);
+  --accent-purple: var(--neon-magenta);
+  --accent-blue: var(--neon-cyan);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-yes: var(--accent-yes);
-  --color-no: var(--accent-no);
-  --color-purple: var(--accent-purple);
-  --color-blue: var(--accent-blue);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text-primary);
+  --color-yes: var(--neon-green);
+  --color-no: var(--neon-red);
+  --color-purple: var(--neon-magenta);
+  --color-blue: var(--neon-cyan);
+  --font-sans: var(--font-retro);
+  --font-mono: var(--font-retro);
 }
 
 * {
@@ -32,186 +46,423 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-retro);
   overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+  position: relative;
 }
 
-/* Subtle noise texture overlay */
+/* CRT scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px);
+  mix-blend-mode: multiply;
+}
+
+/* CRT vignette */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+      transparent 60%,
+      rgba(0, 0, 0, 0.65) 100%);
+}
+
+/* Pixel grid background */
 .bg-mesh {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(34, 197, 94, 0.04) 0%, transparent 50%),
-    var(--background);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-/* Solid card - less glass, more substance */
+/* ── Retro card ── */
 .solid-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: 0;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 136, 0.06),
+    inset 0 0 30px rgba(0, 255, 136, 0.02);
+  position: relative;
 }
 
-/* Minimal glass for specific elements only */
+.solid-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border: 1px solid rgba(0, 255, 136, 0.08);
+  pointer-events: none;
+}
+
+/* Glass card kept minimal */
 .glass-card {
-  background: rgba(20, 20, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  background: rgba(10, 10, 18, 0.97);
+  border: 1px solid var(--border-dim);
+  border-radius: 0;
 }
 
-/* Cleaner swipe indicators */
-.swipe-yes {
-  border-color: var(--accent-yes) !important;
+/* ── Neon glow text ── */
+.glow-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 6px var(--neon-green), 0 0 20px rgba(0, 255, 136, 0.4);
 }
 
-.swipe-no {
-  border-color: var(--accent-no) !important;
+.glow-magenta {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 6px var(--neon-magenta), 0 0 20px rgba(255, 0, 255, 0.4);
 }
 
-/* Odds bar - flatter design */
+.glow-amber {
+  color: var(--neon-amber);
+  text-shadow: 0 0 6px var(--neon-amber), 0 0 20px rgba(255, 170, 0, 0.35);
+}
+
+.glow-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 6px var(--neon-cyan), 0 0 18px rgba(0, 229, 255, 0.3);
+}
+
+/* ── Retro panel border ── */
+.retro-panel {
+  border: 1px solid var(--border-dim);
+  border-radius: 0;
+  background: var(--bg-card);
+  position: relative;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.06), inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.retro-panel::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border: 1px solid rgba(0, 255, 136, 0.06);
+  pointer-events: none;
+}
+
+/* ── Neon border panel ── */
+.neon-border {
+  border: 1px solid var(--neon-green);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.35), inset 0 0 8px rgba(0, 255, 136, 0.06);
+  border-radius: 0;
+}
+
+.neon-border-magenta {
+  border: 1px solid var(--neon-magenta);
+  box-shadow: 0 0 8px rgba(255, 0, 255, 0.35), inset 0 0 8px rgba(255, 0, 255, 0.06);
+  border-radius: 0;
+}
+
+/* ── Odds bar — segmented ── */
 .odds-bar {
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08);
+  height: 8px;
+  background: rgba(0, 255, 136, 0.06);
+  border: 1px solid rgba(0, 255, 136, 0.15);
   overflow: hidden;
+  display: flex;
+  gap: 2px;
+  padding: 1px 2px;
 }
 
 .odds-fill-yes {
-  background: var(--accent-yes);
-  border-radius: 3px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: repeating-linear-gradient(90deg,
+      var(--neon-green) 0px, var(--neon-green) 6px,
+      transparent 6px, transparent 8px);
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+  transition: width 0.4s steps(10);
 }
 
 .odds-fill-no {
-  background: var(--accent-no);
-  border-radius: 3px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: repeating-linear-gradient(90deg,
+      var(--neon-red) 0px, var(--neon-red) 6px,
+      transparent 6px, transparent 8px);
+  box-shadow: 0 0 6px rgba(255, 34, 68, 0.5);
+  margin-left: auto;
+  transition: width 0.4s steps(10);
 }
 
-/* Category badges - flatter, less gradient */
+/* ── Retro badge ── */
 .badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  padding: 3px 8px;
+  border-radius: 0;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-retro);
+  background: rgba(0, 255, 136, 0.06);
+  color: var(--neon-green);
+  border: 1px solid rgba(0, 255, 136, 0.25);
 }
 
 .badge-crypto {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
-  border-color: rgba(139, 92, 246, 0.2);
+  background: rgba(255, 0, 255, 0.08);
+  color: var(--neon-magenta);
+  border-color: rgba(255, 0, 255, 0.3);
+  text-shadow: 0 0 4px rgba(255, 0, 255, 0.5);
 }
 
 .badge-sports {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
-  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(0, 255, 136, 0.08);
+  color: var(--neon-green);
+  border-color: rgba(0, 255, 136, 0.3);
+  text-shadow: 0 0 4px rgba(0, 255, 136, 0.5);
 }
 
 .badge-politics {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border-color: rgba(59, 130, 246, 0.2);
+  background: rgba(0, 229, 255, 0.08);
+  color: var(--neon-cyan);
+  border-color: rgba(0, 229, 255, 0.3);
+  text-shadow: 0 0 4px rgba(0, 229, 255, 0.5);
 }
 
 .badge-weather {
-  background: rgba(251, 146, 60, 0.15);
-  color: #fb923c;
-  border-color: rgba(251, 146, 60, 0.2);
+  background: rgba(255, 170, 0, 0.08);
+  color: var(--neon-amber);
+  border-color: rgba(255, 170, 0, 0.3);
+  text-shadow: 0 0 4px rgba(255, 170, 0, 0.5);
 }
 
 .badge-entertainment {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(255, 34, 68, 0.08);
+  color: var(--neon-red);
+  border-color: rgba(255, 34, 68, 0.3);
+  text-shadow: 0 0 4px rgba(255, 34, 68, 0.5);
 }
 
 .badge-other {
-  background: rgba(255, 255, 255, 0.05);
-  color: #71717a;
-  border-color: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 255, 136, 0.04);
+  color: var(--text-dim);
+  border-color: rgba(0, 255, 136, 0.1);
 }
 
-/* World ID verified badge - simpler */
+/* ── World ID badge ── */
 .world-id-badge {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 4px 8px;
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  border-radius: 0;
+  padding: 3px 8px;
   font-size: 10px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 400;
+  color: var(--neon-green);
+  font-family: var(--font-retro);
 }
 
-/* Minimal pulsing dot */
+/* ── Swipe overlays ── */
+.swipe-yes {
+  border-color: var(--neon-green) !important;
+  box-shadow: 0 0 24px rgba(0, 255, 136, 0.4) !important;
+}
+
+.swipe-no {
+  border-color: var(--neon-red) !important;
+  box-shadow: 0 0 24px rgba(255, 34, 68, 0.4) !important;
+}
+
+/* ── Stat glow ── */
+.stat-glow {
+  position: relative;
+}
+
+.stat-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+  opacity: 0.4;
+}
+
+/* ── Pulse dot ── */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 4px var(--neon-green);
+  }
+
+  50% {
+    opacity: 0.4;
+    box-shadow: 0 0 12px var(--neon-green);
+  }
 }
 
 .pulse-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
-  background: var(--accent-yes);
-  animation: pulse 2s ease-in-out infinite;
+  border-radius: 0;
+  background: var(--neon-green);
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Simpler float animation */
+/* ── Blink cursor ── */
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor-blink::after {
+  content: '_';
+  animation: blink 1s step-end infinite;
+  color: var(--neon-green);
+}
+
+/* ── CRT flicker ── */
+@keyframes flicker {
+  0% {
+    opacity: 1;
+  }
+
+  92% {
+    opacity: 1;
+  }
+
+  93% {
+    opacity: 0.85;
+  }
+
+  94% {
+    opacity: 1;
+  }
+
+  96% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.flicker {
+  animation: flicker 5s infinite;
+}
+
+/* ── Float animation ── */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 .float-anim {
-  animation: float 4s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
 }
 
-/* Stat card - remove glow, add border */
-.stat-glow {
-  position: relative;
+/* ── Retro button ── */
+.retro-btn {
+  font-family: var(--font-retro);
+  border-radius: 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--neon-green);
+  color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.06);
+  transition: all 0.15s;
+  cursor: pointer;
 }
 
-.stat-glow::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+.retro-btn:hover {
+  background: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.4);
 }
 
-/* Scrollbar - minimal */
+.retro-btn-primary {
+  background: var(--neon-green);
+  color: #000;
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.5);
+}
+
+.retro-btn-primary:hover {
+  box-shadow: 0 0 28px rgba(0, 255, 136, 0.7);
+}
+
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  background: rgba(0, 255, 136, 0.2);
+  border-radius: 0;
 }
 
-/* Text utilities */
+/* ── Text utilities ── */
 .text-muted {
   color: var(--text-secondary);
 }
 
 .text-subtle {
-  color: var(--text-tertiary);
+  color: var(--text-dim);
+}
+
+.font-retro {
+  font-family: var(--font-retro);
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+}
+
+.font-vt {
+  font-family: var(--font-vt);
+}
+
+/* ── Scanline stripe on elements ── */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.12) 3px,
+      rgba(0, 0, 0, 0.12) 4px);
+  pointer-events: none;
 }
