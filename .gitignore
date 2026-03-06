@@ -5,7 +5,7 @@ broadcast
 out
 cache
 script
-lib
+contracts/lib
 .env
 .next
 scripts
