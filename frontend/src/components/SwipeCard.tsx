@@ -213,7 +213,7 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                             <span>← NO</span>
                         </div>
                         <div className="world-id-badge text-[10px] flex items-center gap-1">
-                            <span>🌐</span>
+                            <span className="text-[var(--accent-purple)]">W</span>
                             <span>1 Person = 1 Bet</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-[var(--accent-yes)]">

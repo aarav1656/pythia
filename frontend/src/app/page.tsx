@@ -6,6 +6,7 @@ import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink } from 'luci
 import { CardStack } from '@/components/CardStack'
 import { SEED_MARKETS } from '@/lib/markets'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
+import { useDemoMode } from '@/hooks/useDemoMode'
 import { Portfolio } from '@/components/Portfolio'
 import { Achievements } from '@/components/Achievements'
 import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
@@ -15,12 +16,16 @@ import { AITrading } from '@/components/AITrading'
 import { MarketFilters } from '@/components/MarketFilters'
 import { ReferralSystem } from '@/components/ReferralSystem'
 import { TrustTransparency } from '@/components/TrustTransparency'
+import { DemoModeToggle } from '@/components/DemoModeToggle'
 
 export default function Home() {
   const { user, isLoading, isInWorldApp } = useMiniKit()
+  const { isDemoMode } = useDemoMode()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [aiTradingEnabled, setAiTradingEnabled] = useState(false)
+
+  const marketCount = isDemoMode ? SEED_MARKETS.length : 0
 
   return (
     <>
@@ -30,7 +35,7 @@ export default function Home() {
         <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[var(--card-bg)] border border-white/8 flex items-center justify-center">
-              <span className="text-sm">🔮</span>
+              <span className="text-sm font-semibold text-white">P</span>
             </div>
             <div>
               <h1 className="text-base font-semibold text-white tracking-tight">Pythia</h1>
@@ -38,6 +43,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <DemoModeToggle />
             {isInWorldApp ? (
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20">
                 <Globe size={11} className="text-[var(--accent-purple)]" />
@@ -92,15 +98,15 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-2">
             <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
               <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Volume</p>
-              <p className="text-base font-bold text-white">0.233 <span className="text-[10px] text-zinc-500">ETH</span></p>
+              <p className="text-base font-bold text-white">{isDemoMode ? '0.233' : '0.00'} <span className="text-[10px] text-zinc-500">ETH</span></p>
             </div>
             <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
               <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Bettors</p>
-              <p className="text-base font-bold text-white">47</p>
+              <p className="text-base font-bold text-white">{isDemoMode ? '47' : '0'}</p>
             </div>
             <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
               <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Markets</p>
-              <p className="text-base font-bold text-white">{SEED_MARKETS.length}</p>
+              <p className="text-base font-bold text-white">{marketCount}</p>
             </div>
           </div>
         </div>
@@ -134,7 +140,7 @@ export default function Home() {
 
         {/* Card Stack */}
         <div className="flex-1 px-4 max-w-lg mx-auto w-full">
-          <CardStack />
+          <CardStack isDemoMode={isDemoMode} />
         </div>
 
         {/* Footer */}
