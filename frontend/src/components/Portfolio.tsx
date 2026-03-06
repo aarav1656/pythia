@@ -62,7 +62,7 @@ export function Portfolio() {
     }
 
     return (
-        <div className="glass-card p-4 mt-4">
+        <div className="solid-card p-4 mt-4">
             {/* Tab Selector */}
             <div className="flex gap-2 mb-4">
                 <button

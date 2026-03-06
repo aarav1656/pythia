@@ -139,19 +139,19 @@ export function CardStack({ onBet }: CardStackProps) {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="glass-card p-10 text-center max-w-[380px] mx-4"
+                        className="solid-card p-8 text-center max-w-[380px] mx-4"
                     >
-                        <div className="text-5xl mb-4">🎉</div>
-                        <h3 className="text-xl font-bold text-white mb-2">All caught up!</h3>
-                        <p className="text-zinc-400 text-sm mb-6">
+                        <div className="text-4xl mb-3">🎉</div>
+                        <h3 className="text-lg font-semibold text-white mb-2">All caught up!</h3>
+                        <p className="text-sm text-zinc-500 mb-5">
                             You&apos;ve swiped through all active markets.
                             {swipedMarkets.length > 0 && ` You placed ${swipedMarkets.length} bet${swipedMarkets.length > 1 ? 's' : ''}.`}
                         </p>
                         <button
                             onClick={resetCards}
-                            className="flex items-center gap-2 mx-auto px-6 py-3 rounded-full bg-[var(--accent-purple)] text-white font-semibold text-sm hover:brightness-110 transition-all"
+                            className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-lg bg-[var(--accent-purple)] text-white font-medium text-sm hover:brightness-110 transition-all"
                         >
-                            <RotateCcw size={16} />
+                            <RotateCcw size={14} />
                             Browse Again
                         </button>
                     </motion.div>
@@ -160,18 +160,18 @@ export function CardStack({ onBet }: CardStackProps) {
 
             {/* Action Buttons (below cards) */}
             {markets.length > 0 && (
-                <div className="flex items-center gap-6 mt-2">
+                <div className="flex items-center gap-5 mt-2">
                     <button
                         onClick={() => topMarket && handleSwipe(topMarket.id, 'no')}
-                        className="w-14 h-14 rounded-full bg-[var(--accent-no)]/10 border border-[var(--accent-no)]/30 flex items-center justify-center hover:bg-[var(--accent-no)]/20 transition-all active:scale-90"
+                        className="w-12 h-12 rounded-xl bg-[var(--accent-no)]/10 border border-[var(--accent-no)]/25 flex items-center justify-center hover:bg-[var(--accent-no)]/15 transition-all active:scale-90"
                     >
-                        <ThumbsDown size={22} className="text-[var(--accent-no)]" />
+                        <ThumbsDown size={20} className="text-[var(--accent-no)]" />
                     </button>
                     <button
                         onClick={() => topMarket && handleSwipe(topMarket.id, 'yes')}
-                        className="w-14 h-14 rounded-full bg-[var(--accent-yes)]/10 border border-[var(--accent-yes)]/30 flex items-center justify-center hover:bg-[var(--accent-yes)]/20 transition-all active:scale-90"
+                        className="w-12 h-12 rounded-xl bg-[var(--accent-yes)]/10 border border-[var(--accent-yes)]/25 flex items-center justify-center hover:bg-[var(--accent-yes)]/15 transition-all active:scale-90"
                     >
-                        <ThumbsUp size={22} className="text-[var(--accent-yes)]" />
+                        <ThumbsUp size={20} className="text-[var(--accent-yes)]" />
                     </button>
                 </div>
             )}
@@ -183,34 +183,34 @@ export function CardStack({ onBet }: CardStackProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
                         onClick={cancelBet}
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="glass-card p-6 max-w-sm w-full"
+                            className="solid-card p-5 max-w-sm w-full"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="text-center mb-5">
-                                <div className={`text-5xl mb-3 ${showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}`}>
+                            <div className="text-center mb-4">
+                                <div className={`text-4xl mb-2 ${showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}`}>
                                     {showConfirm.side === 'yes' ? '👍' : '👎'}
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-1">
+                                <h3 className="text-base font-semibold text-white mb-1">
                                     Bet {showConfirm.side.toUpperCase()}?
                                 </h3>
-                                <p className="text-sm text-zinc-400">{showConfirm.market.question}</p>
+                                <p className="text-xs text-zinc-500">{showConfirm.market.question}</p>
                             </div>
 
-                            <div className="space-y-3 mb-6">
-                                <div className="flex justify-between text-sm p-3 rounded-xl bg-white/5">
-                                    <span className="text-zinc-400">Amount</span>
-                                    <span className="text-white font-semibold">{showConfirm.market.maxBetPerPerson} ETH</span>
+                            <div className="space-y-2 mb-5">
+                                <div className="flex justify-between text-xs p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                    <span className="text-zinc-500">Amount</span>
+                                    <span className="text-white font-medium">{showConfirm.market.maxBetPerPerson} ETH</span>
                                 </div>
-                                <div className="flex justify-between text-sm p-3 rounded-xl bg-white/5">
-                                    <span className="text-zinc-400">Potential payout</span>
-                                    <span className={`font-semibold ${showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}`}>
+                                <div className="flex justify-between text-xs p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                    <span className="text-zinc-500">Potential payout</span>
+                                    <span className={`font-medium ${showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}`}>
                                         {(() => {
                                             const { market: m, side } = showConfirm
                                             const payout = (m.maxBetPerPerson * (m.yesPool + m.noPool + m.maxBetPerPerson)) /
@@ -219,46 +219,46 @@ export function CardStack({ onBet }: CardStackProps) {
                                         })()} ETH
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-zinc-500 p-3 rounded-xl bg-white/5">
-                                    <Eye size={14} className="text-[var(--accent-purple)]" />
-                                    <span>Your bet is private via Chainlink ACE</span>
+                                <div className="flex items-center gap-2 text-[10px] text-zinc-500 p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                    <Eye size={12} className="text-[var(--accent-purple)]" />
+                                    <span>Private via Chainlink ACE</span>
                                 </div>
                             </div>
 
                             {/* World ID Verification Info */}
                             {isInWorldApp && (
-                                <div className="flex items-center gap-2 text-xs text-zinc-400 p-3 rounded-xl bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20 mb-4">
-                                    <Shield size={14} className="text-[var(--accent-purple)]" />
+                                <div className="flex items-center gap-2 text-[10px] text-zinc-400 p-2.5 rounded-lg bg-[var(--accent-purple)]/8 border border-[var(--accent-purple)]/15 mb-4">
+                                    <Shield size={12} className="text-[var(--accent-purple)]" />
                                     <span>World ID verification required</span>
                                 </div>
                             )}
 
                             {/* Verification Error */}
                             {verificationError && (
-                                <div className="flex items-center gap-2 text-xs text-red-400 p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
+                                <div className="flex items-center gap-2 text-[10px] text-red-400 p-2.5 rounded-lg bg-red-500/10 border border-red-500]/20 mb-4">
                                     <span>{verificationError}</span>
                                 </div>
                             )}
 
-                            <div className="flex gap-3">
+                            <div className="flex gap-2">
                                 <button
                                     onClick={cancelBet}
                                     disabled={isVerifying}
-                                    className="flex-1 py-3 rounded-full border border-white/10 text-zinc-400 text-sm font-semibold hover:bg-white/5 transition-all disabled:opacity-50"
+                                    className="flex-1 py-2.5 rounded-lg border border-white/10 text-zinc-400 text-xs font-medium hover:bg-white/5 transition-all disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={confirmBet}
                                     disabled={isVerifying}
-                                    className={`flex-1 py-3 rounded-full text-sm font-semibold transition-all flex items-center justify-center gap-2 ${showConfirm.side === 'yes'
+                                    className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${showConfirm.side === 'yes'
                                             ? 'bg-[var(--accent-yes)] text-black hover:brightness-110'
                                             : 'bg-[var(--accent-no)] text-white hover:brightness-110'
                                         } disabled:opacity-50`}
                                 >
                                     {isVerifying ? (
                                         <>
-                                            <Loader2 size={16} className="animate-spin" />
+                                            <Loader2 size={14} className="animate-spin" />
                                             Verifying...
                                         </>
                                     ) : (
