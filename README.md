@@ -4,6 +4,27 @@
 
 Pythia is a prediction market platform where **World ID ensures 1-person-1-bet** (no whale manipulation), **ACE private transfers** keep bets and payouts confidential, and **AI resolves markets** using verified real-world data — all powered by **Chainlink CRE**.
 
+## 🚀 Quick Start
+
+```bash
+# Clone & install
+git clone https://github.com/aarav1656/pythia.git
+cd pythia
+
+# Frontend
+cd frontend
+npm install
+npm run dev
+
+# Smart Contracts
+cd ../contracts
+forge install
+forge build
+
+# Deploy (Base Sepolia)
+forge create --rpc-url base-sepolia --constructor-args <args>
+```
+
 ## 🎯 Problem
 
 Existing prediction markets (Polymarket) suffer from:
