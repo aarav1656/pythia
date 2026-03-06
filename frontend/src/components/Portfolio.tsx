@@ -164,13 +164,13 @@ export function Portfolio() {
                                     entry.rank <= 3 ? 'bg-gradient-to-r from-[var(--accent-purple)]/10 to-transparent' : 'bg-white/[0.03]'
                                 }`}
                             >
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                                     entry.rank === 1 ? 'bg-yellow-500/20 text-yellow-400' :
                                     entry.rank === 2 ? 'bg-gray-400/20 text-gray-300' :
                                     entry.rank === 3 ? 'bg-amber-700/20 text-amber-600' :
                                     'bg-white/5 text-zinc-400'
                                 }`}>
-                                    {entry.rank <= 3 ? '🏆' : `#${entry.rank}`}
+                                    {entry.rank}
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm text-white font-medium">{entry.address}</p>

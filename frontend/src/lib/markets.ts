@@ -103,10 +103,10 @@ export const CATEGORY_COLORS: Record<Category, string> = {
 export const CATEGORY_ICONS: Record<Category, string> = {
     CRYPTO: '₿',
     SPORTS: '⚽',
-    POLITICS: '🏛️',
-    WEATHER: '🌤️',
+    POLITICS: '🏛',
+    WEATHER: '🌡',
     ENTERTAINMENT: '🎬',
-    OTHER: '📊',
+    OTHER: '📈',
 }
 
 export function getOdds(market: Market): { yes: number; no: number } {

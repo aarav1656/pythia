@@ -8,11 +8,12 @@ import { useMiniKit } from '@/hooks/useMiniKit'
 import { ThumbsUp, ThumbsDown, RotateCcw, Eye, RefreshCw, Shield, Loader2 } from 'lucide-react'
 
 interface CardStackProps {
+    isDemoMode?: boolean
     onBet?: (marketId: number, side: 'yes' | 'no', proof?: string) => void
 }
 
-export function CardStack({ onBet }: CardStackProps) {
-    const [markets, setMarkets] = useState<Market[]>([...SEED_MARKETS])
+export function CardStack({ isDemoMode = false, onBet }: CardStackProps) {
+    const [markets, setMarkets] = useState<Market[]>(isDemoMode ? [...SEED_MARKETS] : [])
     const [swipedMarkets, setSwipedMarkets] = useState<{ market: Market; side: 'yes' | 'no' }[]>([])
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
     const [isRefreshing, setIsRefreshing] = useState(false)
@@ -88,9 +89,9 @@ export function CardStack({ onBet }: CardStackProps) {
     }, [])
 
     const resetCards = useCallback(() => {
-        setMarkets([...SEED_MARKETS])
+        setMarkets(isDemoMode ? [...SEED_MARKETS] : [])
         setSwipedMarkets([])
-    }, [])
+    }, [isDemoMode])
 
     const topMarket = markets[0]
     const nextMarket = markets[1]
@@ -135,16 +136,40 @@ export function CardStack({ onBet }: CardStackProps) {
                 </AnimatePresence>
 
                 {/* Empty State */}
-                {markets.length === 0 && (
+                {markets.length === 0 && !isDemoMode && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="solid-card p-8 text-center max-w-[380px] mx-4"
                     >
-                        <div className="text-4xl mb-3">🎉</div>
-                        <h3 className="text-lg font-semibold text-white mb-2">All caught up!</h3>
+                        <div className="text-4xl mb-3 text-zinc-600">0</div>
+                        <h3 className="text-lg font-semibold text-white mb-2">No Markets Yet</h3>
                         <p className="text-sm text-zinc-500 mb-5">
-                            You&apos;ve swiped through all active markets.
+                            Markets will appear here once they go live on-chain.
+                        </p>
+                        {swipedMarkets.length > 0 && (
+                            <button
+                                onClick={resetCards}
+                                className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-lg bg-[var(--accent-purple)] text-white font-medium text-sm hover:brightness-110 transition-all"
+                            >
+                                <RotateCcw size={14} />
+                                View Your Bets
+                            </button>
+                        )}
+                    </motion.div>
+                )}
+
+                {/* Demo Mode Empty State */}
+                {markets.length === 0 && isDemoMode && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="solid-card p-8 text-center max-w-[380px] mx-4"
+                    >
+                        <div className="text-4xl mb-3">-</div>
+                        <h3 className="text-lg font-semibold text-white mb-2">No More Markets</h3>
+                        <p className="text-sm text-zinc-500 mb-5">
+                            You have viewed all demo markets.
                             {swipedMarkets.length > 0 && ` You placed ${swipedMarkets.length} bet${swipedMarkets.length > 1 ? 's' : ''}.`}
                         </p>
                         <button
@@ -194,8 +219,8 @@ export function CardStack({ onBet }: CardStackProps) {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="text-center mb-4">
-                                <div className={`text-4xl mb-2 ${showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}`}>
-                                    {showConfirm.side === 'yes' ? '👍' : '👎'}
+                                <div className={`text-4xl mb-2 font-bold ${showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}`}>
+                                    {showConfirm.side === 'yes' ? 'YES' : 'NO'}
                                 </div>
                                 <h3 className="text-base font-semibold text-white mb-1">
                                     Bet {showConfirm.side.toUpperCase()}?

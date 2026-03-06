@@ -63,7 +63,7 @@ const ACHIEVEMENTS: Achievement[] = [
         id: 'predict_10',
         name: 'Oracle',
         description: 'Win 10 predictions',
-        icon: '🔮',
+        icon: 'P',
         unlocked: false,
         progress: 7,
         maxProgress: 10,
