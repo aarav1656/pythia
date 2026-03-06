@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { MiniKitWrapper } from "@/components/MiniKitWrapper";
-import { WagmiProvider } from "wagmi";
-import { config } from "@/lib/contracts";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -25,11 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased bg-mesh min-h-screen`}>
-        <WagmiProvider config={config}>
-          <MiniKitWrapper>
-            {children}
-          </MiniKitWrapper>
-        </WagmiProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
