@@ -14,6 +14,7 @@ import { AITrading } from '@/components/AITrading'
 import { MarketFilters } from '@/components/MarketFilters'
 import { ReferralSystem } from '@/components/ReferralSystem'
 import { TrustTransparency } from '@/components/TrustTransparency'
+import { Achievements } from '@/components/Achievements'
 
 export default function Home() {
   const { user, isLoading, isInWorldApp, verifyWorldID } = useMiniKit()
@@ -114,6 +115,7 @@ export default function Home() {
       {/* Portfolio & Leaderboard */}
       <div className="px-4 max-w-lg mx-auto w-full">
         <Portfolio />
+        <Achievements />
         <AITrading isEnabled={aiTradingEnabled} onToggle={setAiTradingEnabled} />
         <ReferralSystem />
         <TrustTransparency />
