@@ -9,10 +9,12 @@ import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink } from 'luci
 import { Portfolio } from '@/components/Portfolio'
 import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
 import { Onboarding } from '@/components/Onboarding'
+import { NotificationBanner } from '@/components/Notifications'
 
 export default function Home() {
   const { user, isLoading, isInWorldApp, verifyWorldID } = useMiniKit()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
   return (
     <>
@@ -62,6 +64,14 @@ export default function Home() {
             </div>
             <span className="text-[10px] text-zinc-500">Gas-free</span>
           </div>
+        </div>
+        
+        {/* Notifications Toggle */}
+        <div className="px-4 max-w-lg mx-auto w-full mb-3">
+          <NotificationBanner 
+            isEnabled={notificationsEnabled} 
+            onToggle={setNotificationsEnabled} 
+          />
         </div>
       )}
 
