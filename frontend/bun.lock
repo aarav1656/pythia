@@ -1,9 +1,11 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "frontend",
       "dependencies": {
+        "@tanstack/react-query": "^5.60.0",
         "@wagmi/core": "^2.16.0",
         "@worldcoin/minikit-js": "^1.0.0",
         "framer-motion": "^12.35.0",

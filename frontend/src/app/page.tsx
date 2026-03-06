@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink, TrendingUp, ArrowRight } from 'lucide-react'
+import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink, ArrowRight } from 'lucide-react'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { useDemoMode } from '@/hooks/useDemoMode'
 import { Portfolio } from '@/components/Portfolio'
@@ -31,108 +31,182 @@ export default function Home() {
   return (
     <>
       <Onboarding />
-      <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
+      <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-retro)' }}>
+
+        {/* ─── Header ─── */}
+        <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto border-b border-[var(--border-dim)]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[var(--card-bg)] border border-white/8 flex items-center justify-center">
-              <span className="text-sm font-semibold text-white">P</span>
+            {/* Retro logo mark */}
+            <div
+              className="w-9 h-9 flex items-center justify-center"
+              style={{
+                border: '1px solid var(--neon-green)',
+                boxShadow: '0 0 10px rgba(0,255,136,0.4), inset 0 0 8px rgba(0,255,136,0.06)',
+                background: 'rgba(0,255,136,0.06)',
+              }}
+            >
+              <span style={{ color: 'var(--neon-green)', fontSize: 16, textShadow: '0 0 8px var(--neon-green)', fontFamily: 'var(--font-retro)' }}>P</span>
             </div>
             <div>
-              <h1 className="text-base font-semibold text-white tracking-tight">Pythia</h1>
-              <p className="text-[10px] text-zinc-500 -mt-0.5">Prediction Markets</p>
+              <h1 style={{
+                fontFamily: 'var(--font-retro)',
+                fontSize: 14,
+                letterSpacing: 4,
+                color: 'var(--neon-green)',
+                textShadow: '0 0 8px var(--neon-green), 0 0 20px rgba(0,255,136,0.3)',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+              }}>PYTHIA</h1>
+              <p style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 2, marginTop: 3 }}>PREDICTION_MARKETS v0.1</p>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             <DemoModeToggle />
             {isInWorldApp ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20">
-                <Globe size={11} className="text-[var(--accent-purple)]" />
-                <span className="text-[10px] text-[var(--accent-purple)] font-medium">World</span>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px',
+                border: '1px solid rgba(255,0,255,0.35)', background: 'rgba(255,0,255,0.07)',
+                color: 'var(--neon-magenta)', fontSize: 9, letterSpacing: 2,
+                textShadow: '0 0 6px var(--neon-magenta)',
+              }}>
+                <Globe size={9} />
+                <span>WORLD</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 border border-white/8">
-                <span className="text-[10px] text-zinc-500">Browser</span>
+              <div style={{
+                display: 'flex', alignItems: 'center', padding: '3px 8px',
+                border: '1px solid var(--border-dim)', background: 'rgba(0,255,136,0.04)',
+                color: 'var(--text-dim)', fontSize: 9, letterSpacing: 2,
+              }}>
+                BROWSER
               </div>
             )}
           </div>
         </header>
 
-        {/* Wallet Status */}
+        {/* ─── Wallet Status ─── */}
         {isInWorldApp && user.address && (
           <>
-            <div className="px-4 max-w-lg mx-auto w-full mb-2">
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-[var(--card-bg)] border border-white/6">
-                <div className="flex items-center gap-2">
-                  <Wallet size={12} className="text-[var(--accent-yes)]" />
-                  <span className="text-xs text-white font-mono">{formatAddress(user.address)}</span>
+            <div className="px-4 max-w-lg mx-auto w-full mt-2">
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 12px', border: '1px solid rgba(0,255,136,0.2)',
+                background: 'rgba(0,255,136,0.04)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Wallet size={11} style={{ color: 'var(--neon-green)' }} />
+                  <span style={{ fontSize: 11, fontFamily: 'var(--font-retro)', color: 'var(--neon-green)', letterSpacing: 1 }}>
+                    {formatAddress(user.address)}
+                  </span>
                   {user.isVerified && (
-                    <span className="px-1.5 py-0.5 rounded bg-[var(--accent-yes)]/10 text-[9px] text-[var(--accent-yes)] font-medium">
-                      ✓
-                    </span>
+                    <span style={{
+                      padding: '1px 6px', fontSize: 9, letterSpacing: 1,
+                      background: 'rgba(0,255,136,0.1)', color: 'var(--neon-green)',
+                      border: '1px solid rgba(0,255,136,0.3)',
+                    }}>✓ VERIFIED</span>
                   )}
                 </div>
-                <span className="text-[10px] text-zinc-500">gas-free</span>
+                <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 2 }}>GAS-FREE</span>
               </div>
             </div>
-            <div className="px-4 max-w-lg mx-auto w-full mb-2">
+            <div className="px-4 max-w-lg mx-auto w-full mt-2">
               <NotificationBanner isEnabled={notificationsEnabled} onToggle={setNotificationsEnabled} />
             </div>
           </>
         )}
 
-        {/* Not in World App Banner */}
+        {/* ─── Not in World App Banner ─── */}
         {!isInWorldApp && !isLoading && (
-          <div className="px-4 max-w-lg mx-auto w-full mb-2">
-            <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[var(--accent-purple)]/8 border border-[var(--accent-purple)]/15">
+          <div className="px-4 max-w-lg mx-auto w-full mt-2">
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+              border: '1px solid rgba(255,0,255,0.25)', background: 'rgba(255,0,255,0.05)',
+            }}>
               <div>
-                <p className="text-xs text-white font-medium mb-0.5">Open in World App</p>
-                <p className="text-[10px] text-zinc-400">Gas-free • World ID verified • Mobile native</p>
+                <p style={{ fontSize: 11, color: 'var(--neon-magenta)', letterSpacing: 1, marginBottom: 3, textShadow: '0 0 6px rgba(255,0,255,0.5)' }}>
+                  &gt; OPEN IN WORLD APP
+                </p>
+                <p style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>GAS_FREE • WORLD_ID_VERIFIED • MOBILE_NATIVE</p>
               </div>
-              <ExternalLink size={14} className="text-[var(--accent-purple)] shrink-0" />
+              <ExternalLink size={14} style={{ color: 'var(--neon-magenta)', flexShrink: 0 }} />
             </div>
           </div>
         )}
 
-        {/* Stats Banner */}
-        <div className="px-4 max-w-lg mx-auto w-full mb-3">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
-              <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Volume</p>
-              <p className="text-base font-bold text-white">{isDemoMode ? '0.233' : '0.00'} <span className="text-[10px] text-zinc-500">ETH</span></p>
-            </div>
-            <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
-              <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Bettors</p>
-              <p className="text-base font-bold text-white">{isDemoMode ? '47' : '0'}</p>
-            </div>
-            <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
-              <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Markets</p>
-              <p className="text-base font-bold text-white">{isDemoMode ? '5' : '0'}</p>
-            </div>
+        {/* ─── Stats Banner ─── */}
+        <div className="px-4 max-w-lg mx-auto w-full mt-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {[
+              { label: 'VOLUME', value: isDemoMode ? '0.233' : '0.00', unit: 'ETH' },
+              { label: 'BETTORS', value: isDemoMode ? '47' : '0', unit: '' },
+              { label: 'MARKETS', value: isDemoMode ? '5' : '0', unit: '' },
+            ].map(({ label, value, unit }) => (
+              <div key={label} className="stat-glow" style={{
+                padding: '10px 12px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-dim)',
+              }}>
+                <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 2, marginBottom: 6 }}>{label}</p>
+                <p style={{
+                  fontSize: 18, fontFamily: 'var(--font-vt)',
+                  color: 'var(--neon-amber)',
+                  textShadow: '0 0 8px var(--neon-amber)',
+                  lineHeight: 1,
+                }}>
+                  {value} {unit && <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{unit}</span>}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Trade CTA - Gamified */}
-        <div className="px-4 max-w-lg mx-auto w-full mb-4">
-          <button
+        {/* ─── Trade CTA ─── */}
+        <div className="px-4 max-w-lg mx-auto w-full mt-3">
+          <motion.button
             onClick={openTrade}
-            className="w-full relative overflow-hidden rounded-xl bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] p-4 group active:scale-[0.98] transition-transform"
+            whileTap={{ scale: 0.97 }}
+            className="w-full relative overflow-hidden scanlines"
+            style={{
+              padding: '18px 20px',
+              border: '1px solid var(--neon-green)',
+              background: 'rgba(0,255,136,0.06)',
+              boxShadow: '0 0 20px rgba(0,255,136,0.25), inset 0 0 30px rgba(0,255,136,0.04)',
+              cursor: 'pointer',
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-purple)]/80 to-[var(--accent-blue)]/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-white font-semibold text-base">Start Trading</p>
-                <p className="text-white/70 text-xs">Swipe to bet on markets</p>
+            {/* Corner accents */}
+            <span style={{ position: 'absolute', top: 4, left: 4, width: 10, height: 10, borderTop: '2px solid var(--neon-green)', borderLeft: '2px solid var(--neon-green)' }} />
+            <span style={{ position: 'absolute', top: 4, right: 4, width: 10, height: 10, borderTop: '2px solid var(--neon-green)', borderRight: '2px solid var(--neon-green)' }} />
+            <span style={{ position: 'absolute', bottom: 4, left: 4, width: 10, height: 10, borderBottom: '2px solid var(--neon-green)', borderLeft: '2px solid var(--neon-green)' }} />
+            <span style={{ position: 'absolute', bottom: 4, right: 4, width: 10, height: 10, borderBottom: '2px solid var(--neon-green)', borderRight: '2px solid var(--neon-green)' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{
+                  fontSize: 13, letterSpacing: 3, textTransform: 'uppercase',
+                  color: 'var(--neon-green)',
+                  textShadow: '0 0 10px var(--neon-green), 0 0 30px rgba(0,255,136,0.3)',
+                  fontFamily: 'var(--font-retro)',
+                  marginBottom: 5,
+                }}>
+                  [ START TRADING ]
+                </p>
+                <p style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 2 }}>SWIPE_TO_BET_ON_MARKETS</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <ArrowRight size={20} className="text-white" />
+              <div style={{
+                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(0,255,136,0.35)',
+                background: 'rgba(0,255,136,0.08)',
+              }}>
+                <ArrowRight size={18} style={{ color: 'var(--neon-green)' }} />
               </div>
             </div>
-          </button>
+          </motion.button>
         </div>
 
-        {/* Features */}
-        <div className="px-4 max-w-lg mx-auto w-full space-y-3">
+        {/* ─── Features ─── */}
+        <div className="px-4 max-w-lg mx-auto w-full mt-3 space-y-3">
           <Portfolio />
           <Achievements />
           <AITrading isEnabled={aiTradingEnabled} onToggle={setAiTradingEnabled} />
@@ -140,53 +214,50 @@ export default function Home() {
           <TrustTransparency />
         </div>
 
-        {/* Footer */}
+        {/* ─── Footer ─── */}
         <motion.footer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="px-4 py-5 max-w-lg mx-auto w-full mt-4"
         >
-          <div className="solid-card p-4">
-            <h3 className="text-xs font-semibold text-white mb-3 flex items-center gap-2">
-              <Lock size={12} className="text-[var(--accent-purple)]" />
-              Why Pythia?
+          <div style={{
+            padding: '16px',
+            border: '1px solid var(--border-dim)',
+            background: 'var(--bg-card)',
+            position: 'relative',
+          }}>
+            <h3 style={{
+              fontSize: 9, letterSpacing: 3, color: 'var(--neon-cyan)',
+              textShadow: '0 0 6px var(--neon-cyan)',
+              display: 'flex', alignItems: 'center', gap: 8,
+              marginBottom: 14, textTransform: 'uppercase',
+            }}>
+              <Lock size={10} style={{ color: 'var(--neon-cyan)' }} />
+              WHY PYTHIA?
             </h3>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              <div className="flex items-start gap-2">
-                <Shield size={12} className="text-[var(--accent-yes)] mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[11px] font-medium text-white">Fair Odds</p>
-                  <p className="text-[9px] text-zinc-500">1 person = 1 bet via World ID</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', columnGap: 16, rowGap: 12 }}>
+              {[
+                { icon: Shield, color: 'var(--neon-green)', title: 'FAIR_ODDS', sub: '1 person = 1 bet via World ID' },
+                { icon: Eye, color: 'var(--neon-magenta)', title: 'PRIVATE', sub: 'Chainlink ACE hides bets' },
+                { icon: Brain, color: 'var(--neon-cyan)', title: 'AI_RESOLUTION', sub: 'CRE + AI verifies outcomes' },
+                { icon: Globe, color: 'var(--neon-amber)', title: 'WORLD_APP', sub: 'Gas-free transactions' },
+              ].map(({ icon: Icon, color, title, sub }) => (
+                <div key={title} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <Icon size={10} style={{ color, marginTop: 2, flexShrink: 0, filter: `drop-shadow(0 0 4px ${color})` }} />
+                  <div>
+                    <p style={{ fontSize: 9, color, letterSpacing: 1, textShadow: `0 0 4px ${color}`, marginBottom: 2 }}>{title}</p>
+                    <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 0.5 }}>{sub}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <Eye size={12} className="text-[var(--accent-purple)] mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[11px] font-medium text-white">Private</p>
-                  <p className="text-[9px] text-zinc-500">Chainlink ACE hides bets</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <Brain size={12} className="text-[var(--accent-blue)] mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[11px] font-medium text-white">AI Resolution</p>
-                  <p className="text-[9px] text-zinc-500">CRE + AI verifies outcomes</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <Globe size={12} className="text-[var(--accent-yes)] mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[11px] font-medium text-white">World Mini App</p>
-                  <p className="text-[9px] text-zinc-500">Gas-free transactions</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-          <div className="flex items-center justify-center gap-1.5 mt-4">
-            <Zap size={10} className="text-[var(--accent-blue)]" />
-            <span className="text-[9px] text-zinc-600">
-              Chainlink CRE • Data Feeds • ACE • CCIP
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+            <Zap size={9} style={{ color: 'var(--neon-amber)' }} />
+            <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 2 }}>
+              CHAINLINK_CRE • DATA_FEEDS • ACE • CCIP
             </span>
           </div>
         </motion.footer>

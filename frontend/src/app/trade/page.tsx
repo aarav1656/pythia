@@ -5,14 +5,10 @@ import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from '
 import { type Market, SEED_MARKETS, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining, getPotentialPayout } from '@/lib/markets'
 import { useDemoMode } from '@/hooks/useDemoMode'
 import { useMiniKit } from '@/hooks/useMiniKit'
-import { Clock, Users, TrendingUp, Shield, ChevronDown, Zap, ThumbsUp, ThumbsDown, X, Check } from 'lucide-react'
+import { Clock, Users, TrendingUp, ChevronDown, X, Check, RotateCcw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const SWIPE_THRESHOLD = 80
-
-interface TradePageProps {
-    onBet?: (marketId: number, side: 'yes' | 'no', amount?: number) => void
-}
 
 // Haptic feedback
 function useHaptic() {
@@ -34,12 +30,12 @@ export default function TradePage() {
     const [swipedMarkets, setSwipedMarkets] = useState<{ market: Market; side: 'yes' | 'no' }[]>([])
     const [expanded, setExpanded] = useState(false)
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
-    
+
     const x = useMotionValue(0)
-    const rotate = useTransform(x, [-300, 0, 300], [-12, 0, 12])
+    const rotate = useTransform(x, [-300, 0, 300], [-8, 0, 8])
     const yesOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
     const noOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
-    
+
     const haptic = useHaptic()
 
     const currentMarket = markets[currentIndex]
@@ -66,30 +62,58 @@ export default function TradePage() {
         setCurrentIndex(prev => prev + 1)
     }, [])
 
+    // ─── Empty state ───
     if (!hasMoreMarkets) {
         return (
-            <div className="min-h-screen bg-[var(--background)] flex flex-col">
-                {/* Header */}
-                <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
-                    <button onClick={() => router.back()} className="p-2 -ml-2">
-                        <X size={20} className="text-zinc-400" />
+            <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)', fontFamily: 'var(--font-retro)' }}>
+                <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto border-b border-[var(--border-dim)]">
+                    <button onClick={() => router.back()} style={{ padding: 6 }}>
+                        <X size={18} style={{ color: 'var(--text-dim)' }} />
                     </button>
-                    <h1 className="text-base font-semibold text-white">Trade</h1>
-                    <div className="w-10" />
+                    <span style={{ fontSize: 11, letterSpacing: 4, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>
+                        TRADE
+                    </span>
+                    <div style={{ width: 30 }} />
                 </header>
 
-                <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="solid-card p-8 text-center max-w-sm">
-                        <div className="text-4xl mb-3">-</div>
-                        <h3 className="text-lg font-semibold text-white mb-2">No More Markets</h3>
-                        <p className="text-sm text-zinc-500 mb-5">
-                            {swipedMarkets.length > 0 && `You placed ${swipedMarkets.length} bet${swipedMarkets.length > 1 ? 's' : ''}.`}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                    <div style={{
+                        padding: '32px 24px', textAlign: 'center', maxWidth: 300,
+                        border: '1px solid var(--border-dim)', background: 'var(--bg-card)',
+                        position: 'relative',
+                    }}>
+                        {/* Corner accents */}
+                        <span style={{ position: 'absolute', top: 6, left: 6, width: 12, height: 12, borderTop: '1px solid var(--neon-green)', borderLeft: '1px solid var(--neon-green)' }} />
+                        <span style={{ position: 'absolute', top: 6, right: 6, width: 12, height: 12, borderTop: '1px solid var(--neon-green)', borderRight: '1px solid var(--neon-green)' }} />
+                        <span style={{ position: 'absolute', bottom: 6, left: 6, width: 12, height: 12, borderBottom: '1px solid var(--neon-green)', borderLeft: '1px solid var(--neon-green)' }} />
+                        <span style={{ position: 'absolute', bottom: 6, right: 6, width: 12, height: 12, borderBottom: '1px solid var(--neon-green)', borderRight: '1px solid var(--neon-green)' }} />
+
+                        <p style={{ fontSize: 24, fontFamily: 'var(--font-vt)', color: 'var(--neon-amber)', textShadow: '0 0 8px var(--neon-amber)', marginBottom: 12 }}>
+                            --- END ---
                         </p>
+                        <p style={{ fontSize: 11, letterSpacing: 2, color: 'var(--neon-green)', marginBottom: 6 }}>
+                            NO_MORE_MARKETS
+                        </p>
+                        {swipedMarkets.length > 0 && (
+                            <p style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 20 }}>
+                                BETS_PLACED: {swipedMarkets.length}
+                            </p>
+                        )}
                         <button
                             onClick={() => { setCurrentIndex(0); setSwipedMarkets([]) }}
-                            className="px-5 py-2.5 rounded-lg bg-[var(--accent-purple)] text-white font-medium text-sm"
+                            style={{
+                                padding: '10px 20px', fontSize: 10, letterSpacing: 2,
+                                border: '1px solid var(--neon-green)',
+                                background: 'rgba(0,255,136,0.08)',
+                                color: 'var(--neon-green)',
+                                textTransform: 'uppercase',
+                                boxShadow: '0 0 12px rgba(0,255,136,0.25)',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: 8, margin: '0 auto',
+                            }}
                         >
-                            Browse Again
+                            <RotateCcw size={12} />
+                            BROWSE_AGAIN
                         </button>
                     </div>
                 </div>
@@ -102,134 +126,208 @@ export default function TradePage() {
     const timeLeft = getTimeRemaining(market.endTime)
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex flex-col">
-            {/* Header */}
-            <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
-                <button onClick={() => router.back()} className="p-2 -ml-2">
-                    <X size={20} className="text-zinc-400" />
+        <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)', fontFamily: 'var(--font-retro)' }}>
+
+            {/* ─── Header ─── */}
+            <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto border-b border-[var(--border-dim)]">
+                <button onClick={() => router.back()} style={{ padding: 6 }}>
+                    <X size={18} style={{ color: 'var(--text-dim)' }} />
                 </button>
-                <div className="flex items-center gap-2">
-                    {/* Progress indicator */}
-                    <div className="flex items-center gap-1">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {/* Segmented progress */}
+                    <div style={{ display: 'flex', gap: 3 }}>
                         {markets.slice(0, 5).map((_, i) => (
                             <div
                                 key={i}
-                                className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                                    i < currentIndex ? 'bg-[var(--accent-purple)]' :
-                                    i === currentIndex ? 'bg-[var(--accent-purple)]' : 'bg-zinc-700'
-                                }`}
+                                style={{
+                                    width: 16, height: 4,
+                                    background: i <= currentIndex
+                                        ? 'var(--neon-green)'
+                                        : 'rgba(0,255,136,0.1)',
+                                    boxShadow: i <= currentIndex ? '0 0 6px rgba(0,255,136,0.6)' : 'none',
+                                    transition: 'all 0.3s',
+                                }}
                             />
                         ))}
-                        {markets.length > 5 && <span className="text-[10px] text-zinc-500">+{markets.length - 5}</span>}
+                        {markets.length > 5 && (
+                            <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1 }}>+{markets.length - 5}</span>
+                        )}
                     </div>
-                    <span className="text-xs text-zinc-500">{currentIndex + 1}/{markets.length}</span>
+                    <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 2 }}>
+                        {currentIndex + 1}/{markets.length}
+                    </span>
                 </div>
-                <button onClick={skipMarket} className="p-2 -mr-2">
-                    <span className="text-xs text-zinc-500">Skip</span>
+                <button onClick={skipMarket} style={{
+                    padding: '4px 10px', fontSize: 9, letterSpacing: 2,
+                    border: '1px solid var(--border-dim)', color: 'var(--text-dim)',
+                    background: 'transparent', cursor: 'pointer',
+                }}>
+                    SKIP
                 </button>
             </header>
 
-            {/* Card Area */}
-            <div className="flex-1 flex items-center justify-center px-4 pb-4">
+            {/* ─── Card Area ─── */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 16px' }}>
                 <motion.div
-                    className="w-full max-w-[360px]"
+                    style={{ width: '100%', maxWidth: 360 }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <motion.div
-                        className="solid-card cursor-grab active:cursor-grabbing"
-                        style={{ x, rotate }}
+                        style={{
+                            x, rotate,
+                            border: '1px solid var(--border-dim)',
+                            background: 'var(--bg-card)',
+                            position: 'relative',
+                            cursor: 'grab',
+                            boxShadow: '0 0 30px rgba(0,255,136,0.06)',
+                        }}
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.8}
                         onDragEnd={handleDragEnd}
-                        whileTap={{ scale: 1.01 }}
+                        whileTap={{ scale: 1.01, cursor: 'grabbing' }}
                     >
-                        {/* Swipe Overlays */}
+                        {/* ─── YES Swipe Overlay ─── */}
                         <motion.div
-                            className="absolute inset-0 rounded-2xl flex items-center justify-center pointer-events-none z-20"
-                            style={{ opacity: yesOpacity }}
+                            style={{
+                                position: 'absolute', inset: 0, display: 'flex',
+                                alignItems: 'center', justifyContent: 'center',
+                                pointerEvents: 'none', zIndex: 20, opacity: yesOpacity,
+                            }}
                         >
-                            <div className="absolute inset-0 rounded-2xl border-2 border-[var(--accent-yes)]" />
-                            <div className="bg-[var(--accent-yes)]/20 rounded-lg px-5 py-2 border border-[var(--accent-yes)]/50 rotate-[-8deg]">
-                                <span className="text-[var(--accent-yes)] text-xl font-bold">YES</span>
-                            </div>
-                        </motion.div>
-                        <motion.div
-                            className="absolute inset-0 rounded-2xl flex items-center justify-center pointer-events-none z-20"
-                            style={{ opacity: noOpacity }}
-                        >
-                            <div className="absolute inset-0 rounded-2xl border-2 border-[var(--accent-no)]" />
-                            <div className="bg-[var(--accent-no)]/20 rounded-lg px-5 py-2 border border-[var(--accent-no)]/50 rotate-[8deg]">
-                                <span className="text-[var(--accent-no)] text-xl font-bold">NO</span>
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                border: '2px solid var(--neon-green)',
+                                boxShadow: '0 0 30px rgba(0,255,136,0.5), inset 0 0 30px rgba(0,255,136,0.04)',
+                            }} />
+                            <div style={{
+                                padding: '8px 20px', border: '1px solid var(--neon-green)',
+                                background: 'rgba(0,255,136,0.12)',
+                                transform: 'rotate(-6deg)',
+                                boxShadow: '0 0 20px rgba(0,255,136,0.4)',
+                            }}>
+                                <span style={{
+                                    fontSize: 20, letterSpacing: 6,
+                                    color: 'var(--neon-green)',
+                                    textShadow: '0 0 12px var(--neon-green)',
+                                    fontFamily: 'var(--font-retro)',
+                                }}>YES</span>
                             </div>
                         </motion.div>
 
-                        {/* Card Content */}
-                        <div className="p-5">
+                        {/* ─── NO Swipe Overlay ─── */}
+                        <motion.div
+                            style={{
+                                position: 'absolute', inset: 0, display: 'flex',
+                                alignItems: 'center', justifyContent: 'center',
+                                pointerEvents: 'none', zIndex: 20, opacity: noOpacity,
+                            }}
+                        >
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                border: '2px solid var(--neon-red)',
+                                boxShadow: '0 0 30px rgba(255,34,68,0.5), inset 0 0 30px rgba(255,34,68,0.04)',
+                            }} />
+                            <div style={{
+                                padding: '8px 20px', border: '1px solid var(--neon-red)',
+                                background: 'rgba(255,34,68,0.12)',
+                                transform: 'rotate(6deg)',
+                                boxShadow: '0 0 20px rgba(255,34,68,0.4)',
+                            }}>
+                                <span style={{
+                                    fontSize: 20, letterSpacing: 6,
+                                    color: 'var(--neon-red)',
+                                    textShadow: '0 0 12px var(--neon-red)',
+                                    fontFamily: 'var(--font-retro)',
+                                }}>NO</span>
+                            </div>
+                        </motion.div>
+
+                        {/* ─── Card Content ─── */}
+                        <div style={{ padding: '20px' }}>
                             {/* Category & Timer */}
-                            <div className="flex items-center justify-between mb-4">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                                 <span className={`badge ${CATEGORY_COLORS[market.category]}`}>
                                     {CATEGORY_ICONS[market.category]} {market.category}
                                 </span>
-                                <div className="flex items-center gap-1 text-xs text-zinc-500">
-                                    <Clock size={12} />
-                                    <span>{timeLeft}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <Clock size={10} style={{ color: 'var(--neon-amber)' }} />
+                                    <span style={{ fontSize: 9, color: 'var(--neon-amber)', letterSpacing: 1, textShadow: '0 0 4px rgba(255,170,0,0.5)' }}>{timeLeft}</span>
                                 </div>
                             </div>
 
                             {/* Question */}
-                            <h2 className="text-lg font-semibold leading-tight text-white mb-4">
+                            <h2 style={{
+                                fontSize: 14, lineHeight: 1.6, color: 'var(--text-primary)',
+                                marginBottom: 16, fontFamily: 'var(--font-retro)',
+                                borderLeft: '2px solid var(--neon-green)',
+                                paddingLeft: 10,
+                                boxShadow: '-4px 0 12px rgba(0,255,136,0.15)',
+                            }}>
                                 {market.question}
                             </h2>
 
                             {/* Odds */}
-                            <div className="mb-3">
-                                <div className="flex justify-between text-xs font-medium mb-2">
-                                    <span className="text-[var(--accent-yes)]">YES {odds.yes}%</span>
-                                    <span className="text-[var(--accent-no)]">NO {odds.no}%</span>
+                            <div style={{ marginBottom: 14 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <span style={{ fontSize: 10, letterSpacing: 2, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>
+                                        YES {odds.yes}%
+                                    </span>
+                                    <span style={{ fontSize: 10, letterSpacing: 2, color: 'var(--neon-red)', textShadow: '0 0 6px var(--neon-red)' }}>
+                                        {odds.no}% NO
+                                    </span>
                                 </div>
-                                <div className="odds-bar flex">
+                                <div className="odds-bar" style={{ display: 'flex' }}>
                                     <div className="odds-fill-yes" style={{ width: `${odds.yes}%` }} />
-                                    <div className="odds-fill-no ml-auto" style={{ width: `${odds.no}%` }} />
+                                    <div className="odds-fill-no" style={{ width: `${odds.no}%` }} />
                                 </div>
                             </div>
 
                             {/* Stats */}
-                            <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3">
-                                <div className="flex items-center gap-1">
-                                    <Users size={11} />
-                                    <span>{market.betCount}</span>
+                            <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <Users size={10} style={{ color: 'var(--text-dim)' }} />
+                                    <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>{market.betCount}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <TrendingUp size={11} />
-                                    <span>{(market.yesPool + market.noPool).toFixed(2)} ETH</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <TrendingUp size={10} style={{ color: 'var(--text-dim)' }} />
+                                    <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>
+                                        {(market.yesPool + market.noPool).toFixed(2)} ETH
+                                    </span>
                                 </div>
                             </div>
 
                             {/* Expand */}
                             <button
                                 onClick={() => setExpanded(!expanded)}
-                                className="w-full flex items-center justify-center gap-1 text-[10px] text-zinc-500 py-1"
+                                style={{
+                                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                    padding: '6px 0', fontSize: 9, letterSpacing: 2, color: 'var(--text-dim)',
+                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                    borderTop: '1px solid rgba(0,255,136,0.08)',
+                                }}
                             >
-                                <span>{expanded ? 'Less' : 'More'}</span>
-                                <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                                <span>{expanded ? 'COLLAPSE' : 'DETAILS'}</span>
+                                <ChevronDown size={10} style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                             </button>
 
                             {expanded && (
-                                <div className="pt-3 border-t border-white/5 mt-2 space-y-2 text-xs">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500">Max bet</span>
-                                        <span className="text-white">{market.maxBetPerPerson} ETH</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500">Payout (YES)</span>
-                                        <span className="text-[var(--accent-yes)]">{getPotentialPayout(market.maxBetPerPerson, market, true).toFixed(4)} ETH</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500">Payout (NO)</span>
-                                        <span className="text-[var(--accent-no)]">{getPotentialPayout(market.maxBetPerPerson, market, false).toFixed(4)} ETH</span>
-                                    </div>
+                                <div style={{ paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {[
+                                        { label: 'MAX_BET', value: `${market.maxBetPerPerson} ETH`, color: 'var(--text-primary)' },
+                                        { label: 'PAYOUT_YES', value: `${getPotentialPayout(market.maxBetPerPerson, market, true).toFixed(4)} ETH`, color: 'var(--neon-green)' },
+                                        { label: 'PAYOUT_NO', value: `${getPotentialPayout(market.maxBetPerPerson, market, false).toFixed(4)} ETH`, color: 'var(--neon-red)' },
+                                    ].map(({ label, value, color }) => (
+                                        <div key={label} style={{
+                                            display: 'flex', justifyContent: 'space-between',
+                                            padding: '6px 8px', background: 'rgba(0,255,136,0.025)',
+                                            border: '1px solid rgba(0,255,136,0.06)',
+                                        }}>
+                                            <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>{label}</span>
+                                            <span style={{ fontSize: 9, color, letterSpacing: 1 }}>{value}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -237,74 +335,144 @@ export default function TradePage() {
                 </motion.div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="px-4 pb-6 max-w-lg mx-auto w-full">
-                <div className="flex items-center justify-center gap-5">
+            {/* ─── Action Buttons ─── */}
+            <div style={{ padding: '0 16px 24px', maxWidth: 448, margin: '0 auto', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+                    {/* NO button */}
                     <button
                         onClick={() => { haptic('light'); setShowConfirm({ market, side: 'no' }) }}
-                        className="w-14 h-14 rounded-xl bg-[var(--accent-no)]/10 border border-[var(--accent-no)]/25 flex items-center justify-center active:scale-95 transition-transform"
+                        style={{
+                            width: 58, height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: '1px solid rgba(255,34,68,0.45)',
+                            background: 'rgba(255,34,68,0.07)',
+                            boxShadow: '0 0 16px rgba(255,34,68,0.2)',
+                            cursor: 'pointer', transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 28px rgba(255,34,68,0.5)')}
+                        onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 16px rgba(255,34,68,0.2)')}
                     >
-                        <X size={24} className="text-[var(--accent-no)]" />
+                        <X size={22} style={{ color: 'var(--neon-red)', filter: 'drop-shadow(0 0 4px rgba(255,34,68,0.6))' }} />
                     </button>
+                    {/* YES button */}
                     <button
                         onClick={() => { haptic('light'); setShowConfirm({ market, side: 'yes' }) }}
-                        className="w-14 h-14 rounded-xl bg-[var(--accent-yes)]/10 border border-[var(--accent-yes)]/25 flex items-center justify-center active:scale-95 transition-transform"
+                        style={{
+                            width: 58, height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: '1px solid rgba(0,255,136,0.45)',
+                            background: 'rgba(0,255,136,0.07)',
+                            boxShadow: '0 0 16px rgba(0,255,136,0.2)',
+                            cursor: 'pointer', transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 28px rgba(0,255,136,0.5)')}
+                        onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 16px rgba(0,255,136,0.2)')}
                     >
-                        <Check size={24} className="text-[var(--accent-yes)]" />
+                        <Check size={22} style={{ color: 'var(--neon-green)', filter: 'drop-shadow(0 0 4px rgba(0,255,136,0.6))' }} />
                     </button>
                 </div>
-                <p className="text-[10px] text-zinc-600 text-center mt-2">Swipe or tap to bet</p>
+                <p style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', marginTop: 10, letterSpacing: 2 }}>
+                    SWIPE_OR_TAP_TO_BET
+                </p>
             </div>
 
-            {/* Confirm Modal */}
+            {/* ─── Confirm Modal ─── */}
             <AnimatePresence>
                 {showConfirm && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 50,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: 'rgba(0,0,0,0.85)', padding: 16,
+                            backdropFilter: 'blur(4px)',
+                        }}
                         onClick={() => setShowConfirm(null)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
+                            initial={{ scale: 0.88, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="solid-card p-5 max-w-xs w-full"
+                            exit={{ scale: 0.88, opacity: 0 }}
+                            style={{
+                                maxWidth: 300, width: '100%', padding: '24px 20px',
+                                background: 'var(--bg-card)',
+                                border: `1px solid ${showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'}`,
+                                boxShadow: showConfirm.side === 'yes'
+                                    ? '0 0 32px rgba(0,255,136,0.3)'
+                                    : '0 0 32px rgba(255,34,68,0.3)',
+                                position: 'relative',
+                            }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-base font-semibold text-white text-center mb-1">
-                                Bet {showConfirm.side.toUpperCase()}?
-                            </h3>
-                            <p className="text-xs text-zinc-500 text-center mb-4">{showConfirm.market.question}</p>
-                            
-                            <div className="space-y-2 mb-4">
-                                <div className="flex justify-between text-xs p-2 rounded-lg bg-white/[0.03]">
-                                    <span className="text-zinc-500">Amount</span>
-                                    <span className="text-white">{showConfirm.market.maxBetPerPerson} ETH</span>
-                                </div>
-                                <div className="flex justify-between text-xs p-2 rounded-lg bg-white/[0.03]">
-                                    <span className="text-zinc-500">Payout</span>
-                                    <span className={showConfirm.side === 'yes' ? 'text-[var(--accent-yes)]' : 'text-[var(--accent-no)]'}>
-                                        {getPotentialPayout(showConfirm.market.maxBetPerPerson, showConfirm.market, showConfirm.side === 'yes').toFixed(4)} ETH
-                                    </span>
-                                </div>
+                            {/* Corner accents */}
+                            {['top-3 left-3 border-t border-l', 'top-3 right-3 border-t border-r', 'bottom-3 left-3 border-b border-l', 'bottom-3 right-3 border-b border-r'].map((cls, i) => (
+                                <span key={i} className={`absolute ${cls} w-3 h-3`} style={{
+                                    borderColor: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
+                                }} />
+                            ))}
+
+                            <p style={{
+                                fontSize: 14, letterSpacing: 4, textAlign: 'center',
+                                fontFamily: 'var(--font-retro)',
+                                color: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
+                                textShadow: showConfirm.side === 'yes'
+                                    ? '0 0 10px var(--neon-green)' : '0 0 10px var(--neon-red)',
+                                marginBottom: 8,
+                            }}>
+                                BET {showConfirm.side.toUpperCase()}?
+                            </p>
+                            <p style={{ fontSize: 9, color: 'var(--text-dim)', textAlign: 'center', letterSpacing: 1, marginBottom: 20, lineHeight: 1.6 }}>
+                                {showConfirm.market.question}
+                            </p>
+
+                            <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {[
+                                    { label: 'AMOUNT', value: `${showConfirm.market.maxBetPerPerson} ETH` },
+                                    {
+                                        label: 'PAYOUT',
+                                        value: `${getPotentialPayout(showConfirm.market.maxBetPerPerson, showConfirm.market, showConfirm.side === 'yes').toFixed(4)} ETH`,
+                                        highlight: true,
+                                    },
+                                ].map(({ label, value, highlight }) => (
+                                    <div key={label} style={{
+                                        display: 'flex', justifyContent: 'space-between', padding: '7px 10px',
+                                        background: 'rgba(0,255,136,0.025)', border: '1px solid rgba(0,255,136,0.06)',
+                                    }}>
+                                        <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>{label}</span>
+                                        <span style={{
+                                            fontSize: 9, letterSpacing: 1,
+                                            color: highlight
+                                                ? (showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)')
+                                                : 'var(--text-primary)',
+                                        }}>{value}</span>
+                                    </div>
+                                ))}
                             </div>
 
-                            <div className="flex gap-2">
+                            <div style={{ display: 'flex', gap: 10 }}>
                                 <button
                                     onClick={() => setShowConfirm(null)}
-                                    className="flex-1 py-2.5 rounded-lg border border-white/10 text-zinc-400 text-xs"
+                                    style={{
+                                        flex: 1, padding: '10px 0', fontSize: 9, letterSpacing: 2,
+                                        border: '1px solid var(--border-dim)', color: 'var(--text-dim)',
+                                        background: 'transparent', cursor: 'pointer', textTransform: 'uppercase',
+                                    }}
                                 >
-                                    Cancel
+                                    CANCEL
                                 </button>
                                 <button
                                     onClick={confirmBet}
-                                    className={`flex-1 py-2.5 rounded-lg text-xs font-medium ${
-                                        showConfirm.side === 'yes' ? 'bg-[var(--accent-yes)] text-black' : 'bg-[var(--accent-no)] text-white'
-                                    }`}
+                                    style={{
+                                        flex: 1, padding: '10px 0', fontSize: 9, letterSpacing: 2,
+                                        border: `1px solid ${showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'}`,
+                                        background: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
+                                        color: '#000', cursor: 'pointer', textTransform: 'uppercase',
+                                        fontWeight: 700,
+                                        boxShadow: showConfirm.side === 'yes'
+                                            ? '0 0 14px rgba(0,255,136,0.5)' : '0 0 14px rgba(255,34,68,0.5)',
+                                    }}
                                 >
-                                    Confirm
+                                    CONFIRM
                                 </button>
                             </div>
                         </motion.div>
