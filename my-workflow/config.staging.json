@@ -1,7 +1,7 @@
 {
     "schedule": "*/60 * * * * *",
-    "chainName": "ethereum-testnet-sepolia-base-1",
-    "pythiaContract": "0x0000000000000000000000000000000000000000",
+    "chainName": "worldchain-testnet-sepolia-480-1",
+    "pythiaContract": "0x6158fa6bA28a664660B3beb4F8992694dbAD4fAC",
     "worldId": {
         "appId": "app_staging_pythia",
         "actionId": "bet",
@@ -10,7 +10,7 @@
     "privateTransfer": {
         "apiBaseUrl": "https://convergence2026-token-api.cldev.cloud",
         "vaultContract": "0xE588a6c73933BFD66Af9b4A07d48bcE59c0D2d13",
-        "chainId": 11155111,
+        "chainId": 4801,
         "treasuryAddress": "0x83F9d93ddfbaB266bf7c69110dC2F15e8fF3Ad4a",
         "paymentToken": "0x779877A7B0D9E8603169DdbD7836e478b4624789"
     },
