@@ -1,0 +1,16 @@
+{
+    "name": "pythia-workflow",
+    "version": "1.0.0",
+    "description": "Pythia — Sybil-Resistant Private Prediction Markets with CRE + World ID + ACE",
+    "type": "module",
+    "scripts": {
+        "build": "bun build main.ts --outdir dist --target node",
+        "simulate": "cre workflow simulate my-workflow -T staging-settings"
+    },
+    "dependencies": {
+        "@chainlink/cre-sdk": "^1.1.2",
+        "@noble/curves": "^2.0.1",
+        "viem": "^2.27.2",
+        "zod": "^3.24.2"
+    }
+}
