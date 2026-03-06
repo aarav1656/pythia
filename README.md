@@ -1,38 +1,17 @@
-# Pythia — Sybil-Resistant Private Prediction Markets
+# Pythia Sybil-Resistant Private Prediction Markets
 
 > **"The prediction market where every person matters equally, and your bets stay private."**
 
 Pythia is a prediction market platform where **World ID ensures 1-person-1-bet** (no whale manipulation), **ACE private transfers** keep bets and payouts confidential, and **AI resolves markets** using verified real-world data — all powered by **Chainlink CRE**.
 
-## 🚀 Quick Start
-
-```bash
-# Clone & install
-git clone https://github.com/aarav1656/pythia.git
-cd pythia
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# Smart Contracts
-cd ../contracts
-forge install
-forge build
-
-# Deploy (Base Sepolia)
-forge create --rpc-url base-sepolia --constructor-args <args>
-```
-
-## 🎯 Problem
+## Problem
 
 Existing prediction markets (Polymarket) suffer from:
 - **Whale manipulation**: Single wallets move odds 10%+ with millions in capital
 - **Public bets**: Your position is visible on Etherscan — dangerous for political, corporate, or sensitive markets
 - **Complex UX**: Desktop-heavy DeFi interfaces exclude mobile users
 
-## 💡 Solution
+## Solution
 
 | Feature | How It Works |
 |---------|-------------|
@@ -46,7 +25,7 @@ Existing prediction markets (Polymarket) suffer from:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    PYTHIA PLATFORM                       │
+│                    PYTHIA PLATFORM                      │
 ├──────────────┬──────────────────┬───────────────────────┤
 │  Smart       │  CRE Workflow    │  Frontend             │
 │  Contract    │  (6 Steps)       │  (Tinder UI)          │
@@ -59,7 +38,7 @@ Existing prediction markets (Polymarket) suffer from:
 │              │  6. ACE Payouts  │                       │
 ├──────────────┴──────────────────┴───────────────────────┤
 │           Chainlink Capabilities (6 Used)               │
-│  CRE · Secrets · Confidential HTTP · ACE · Feeds · CCIP│
+│  CRE · Secrets · Confidential HTTP · ACE · Feeds · CCIP │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -121,7 +100,7 @@ cre workflow simulate my-workflow -T staging-settings
 ```bash
 cd frontend
 npm install
-npm run dev                   # http://localhost:3000
+npm run dev
 ```
 
 ## 🧪 Testing
@@ -149,19 +128,6 @@ hasUsedNullifier[marketId][worldIdNullifier] = true;
 // PLUS address-level check (belt + suspenders)
 require(!userHasBet[marketId][msg.sender], "Pythia: already placed bet");
 ```
-
-## 🏆 Hackathon Tracks Covered
-
-| Track | Prize | How Pythia Qualifies |
-|-------|-------|---------------------|
-| **Prediction Markets** | $16,000 | Core product — sybil-resistant prediction market |
-| **World ID + CRE** | $10,000 | World ID nullifier for 1-person-1-bet enforcement |
-| **World Mini App** | $10,000 | Tinder-style mobile UI, World App compatible |
-| **Privacy** | $8,000 | ACE private bets + payouts, Confidential HTTP |
-| **CRE & AI** | $16,000 | AI-powered market resolution via OpenRouter |
-| **Top 10** | $20,000 | Eligible as one of top projects |
-
-**Total potential prize pool coverage: $80,000+**
 
 ## 📜 License
 
