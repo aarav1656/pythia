@@ -1,26 +1,205 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0f;
+  --foreground: #f0f0f5;
+  --card-bg: rgba(20, 20, 35, 0.85);
+  --card-border: rgba(120, 80, 255, 0.15);
+  --accent-yes: #00e676;
+  --accent-no: #ff3d71;
+  --accent-purple: #7c4dff;
+  --accent-blue: #448aff;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-yes: var(--accent-yes);
+  --color-no: var(--accent-no);
+  --color-purple: var(--accent-purple);
+  --color-blue: var(--accent-blue);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  overflow-x: hidden;
+}
+
+/* Animated gradient background */
+.bg-mesh {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(124, 77, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 230, 118, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(255, 61, 113, 0.05) 0%, transparent 50%),
+    var(--background);
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+}
+
+/* Swipe indicators */
+.swipe-yes {
+  box-shadow: 0 0 60px rgba(0, 230, 118, 0.3), inset 0 0 60px rgba(0, 230, 118, 0.05);
+  border-color: rgba(0, 230, 118, 0.5) !important;
+}
+
+.swipe-no {
+  box-shadow: 0 0 60px rgba(255, 61, 113, 0.3), inset 0 0 60px rgba(255, 61, 113, 0.05);
+  border-color: rgba(255, 61, 113, 0.5) !important;
+}
+
+/* Odds bar */
+.odds-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.odds-fill-yes {
+  background: linear-gradient(90deg, var(--accent-yes), #69f0ae);
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.odds-fill-no {
+  background: linear-gradient(90deg, #ff6090, var(--accent-no));
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Category badges */
+.badge {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-crypto {
+  background: rgba(124, 77, 255, 0.15);
+  color: #b388ff;
+}
+
+.badge-sports {
+  background: rgba(0, 230, 118, 0.15);
+  color: #69f0ae;
+}
+
+.badge-politics {
+  background: rgba(68, 138, 255, 0.15);
+  color: #82b1ff;
+}
+
+.badge-weather {
+  background: rgba(255, 171, 64, 0.15);
+  color: #ffd180;
+}
+
+.badge-entertainment {
+  background: rgba(255, 61, 113, 0.15);
+  color: #ff80ab;
+}
+
+.badge-other {
+  background: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+}
+
+/* World ID verified badge */
+.world-id-badge {
+  background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(124, 77, 255, 0.1));
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Pulsing dot for live markets */
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-yes);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Swipe instruction animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Stat card glow */
+.stat-glow {
+  position: relative;
+}
+
+.stat-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.3), rgba(0, 230, 118, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }
