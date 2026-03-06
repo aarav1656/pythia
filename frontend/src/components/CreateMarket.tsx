@@ -71,7 +71,7 @@ export function CreateMarketModal({ isOpen, onClose, onSubmit }: CreateMarketMod
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="glass-card p-6 max-w-sm w-full"
+                    className="solid-card p-6 max-w-sm w-full"
                     onClick={e => e.stopPropagation()}
                 >
                     <div className="flex items-center justify-between mb-4">

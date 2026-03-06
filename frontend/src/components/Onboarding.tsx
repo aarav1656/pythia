@@ -80,13 +80,13 @@ export function Onboarding() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className="glass-card p-8 max-w-sm w-full text-center"
+                        className="solid-card p-8 max-w-sm w-full text-center"
                     >
                         {/* Progress */}
                         <div className="flex gap-1 mb-6 justify-center">

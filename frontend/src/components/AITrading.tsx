@@ -26,7 +26,7 @@ export function AITrading({ isEnabled, onToggle }: AITradingProps) {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-4 mt-4"
+            className="solid-card p-4 mt-4"
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-4">

@@ -88,7 +88,7 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
             }}
         >
             <motion.div
-                className="glass-card w-full max-w-[380px] mx-4 cursor-grab active:cursor-grabbing select-none"
+                className="solid-card w-full max-w-[380px] mx-4 cursor-grab active:cursor-grabbing select-none"
                 style={{ x, rotate }}
                 drag={isTop ? 'x' : false}
                 dragConstraints={{ left: 0, right: 0 }}
@@ -98,45 +98,45 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
             >
                 {/* YES/NO Overlay Indicators */}
                 <motion.div
-                    className="absolute inset-0 rounded-3xl flex items-center justify-center pointer-events-none z-20"
+                    className="absolute inset-0 rounded-2xl flex items-center justify-center pointer-events-none z-20"
                     style={{ opacity: yesOpacity }}
                 >
-                    <div className="absolute inset-0 rounded-3xl swipe-yes" />
-                    <div className="bg-[var(--accent-yes)]/20 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-[var(--accent-yes)] rotate-[-12deg]">
-                        <span className="text-[var(--accent-yes)] text-4xl font-extrabold tracking-widest">YES</span>
+                    <div className="absolute inset-0 rounded-2xl swipe-yes" />
+                    <div className="bg-[var(--accent-yes)]/15 rounded-lg px-6 py-3 border border-[var(--accent-yes)]/40 rotate-[-10deg]">
+                        <span className="text-[var(--accent-yes)] text-2xl font-bold tracking-widest">YES</span>
                     </div>
                 </motion.div>
                 <motion.div
-                    className="absolute inset-0 rounded-3xl flex items-center justify-center pointer-events-none z-20"
+                    className="absolute inset-0 rounded-2xl flex items-center justify-center pointer-events-none z-20"
                     style={{ opacity: noOpacity }}
                 >
-                    <div className="absolute inset-0 rounded-3xl swipe-no" />
-                    <div className="bg-[var(--accent-no)]/20 backdrop-blur-sm rounded-2xl px-8 py-4 border-2 border-[var(--accent-no)] rotate-[12deg]">
-                        <span className="text-[var(--accent-no)] text-4xl font-extrabold tracking-widest">NO</span>
+                    <div className="absolute inset-0 rounded-2xl swipe-no" />
+                    <div className="bg-[var(--accent-no)]/15 rounded-lg px-6 py-3 border border-[var(--accent-no)]/40 rotate-[10deg]">
+                        <span className="text-[var(--accent-no)] text-2xl font-bold tracking-widest">NO</span>
                     </div>
                 </motion.div>
 
                 {/* Card Content */}
-                <div className="p-6 relative z-10">
+                <div className="p-5 relative z-10">
                     {/* Header: Category + Timer */}
-                    <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center justify-between mb-4">
                         <span className={`badge ${CATEGORY_COLORS[market.category]}`}>
                             {CATEGORY_ICONS[market.category]} {market.category}
                         </span>
-                        <div className="flex items-center gap-1.5 text-sm text-zinc-400">
-                            <Clock size={14} />
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                            <Clock size={12} />
                             <span>{timeLeft}</span>
                         </div>
                     </div>
 
                     {/* Question */}
-                    <h2 className="text-xl font-bold leading-tight text-white mb-6">
+                    <h2 className="text-lg font-semibold leading-tight text-white mb-4">
                         {market.question}
                     </h2>
 
                     {/* Odds Bar */}
-                    <div className="mb-4">
-                        <div className="flex justify-between text-sm font-semibold mb-2">
+                    <div className="mb-3">
+                        <div className="flex justify-between text-xs font-medium mb-2">
                             <span className="text-[var(--accent-yes)]">YES {odds.yes}%</span>
                             <span className="text-[var(--accent-no)]">NO {odds.no}%</span>
                         </div>
@@ -147,17 +147,17 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                     </div>
 
                     {/* Stats Row */}
-                    <div className="flex items-center gap-4 text-sm text-zinc-400 mb-5">
-                        <div className="flex items-center gap-1.5">
-                            <Users size={14} />
-                            <span>{market.betCount} bets</span>
+                    <div className="flex items-center gap-3 text-xs text-zinc-500 mb-4">
+                        <div className="flex items-center gap-1">
+                            <Users size={12} />
+                            <span>{market.betCount}</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <TrendingUp size={14} />
-                            <span>{(market.yesPool + market.noPool).toFixed(3)} ETH</span>
+                        <div className="flex items-center gap-1">
+                            <TrendingUp size={12} />
+                            <span>{(market.yesPool + market.noPool).toFixed(2)} ETH</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <Shield size={14} className="text-[var(--accent-yes)]" />
+                        <div className="flex items-center gap-1">
+                            <Shield size={12} className="text-[var(--accent-yes)]" />
                             <span className="text-[var(--accent-yes)]">World ID</span>
                         </div>
                     </div>
@@ -165,11 +165,11 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                     {/* Expandable Details */}
                     <button
                         onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-                        className="w-full flex items-center justify-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-1"
+                        className="w-full flex items-center justify-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors py-1"
                     >
                         <span>{expanded ? 'Less' : 'More'} details</span>
                         <motion.div animate={{ rotate: expanded ? 180 : 0 }}>
-                            <ChevronDown size={14} />
+                            <ChevronDown size={12} />
                         </motion.div>
                     </button>
 
@@ -181,26 +181,26 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                             >
-                                <div className="pt-4 border-t border-white/5 mt-2 space-y-3">
-                                    <div className="flex justify-between text-sm">
+                                <div className="pt-3 border-t border-white/5 mt-2 space-y-2">
+                                    <div className="flex justify-between text-xs">
                                         <span className="text-zinc-500">Max bet / person</span>
                                         <span className="text-white font-medium">{market.maxBetPerPerson} ETH</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-zinc-500">Potential payout (0.01 ETH YES)</span>
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-zinc-500">Payout (0.01 ETH YES)</span>
                                         <span className="text-[var(--accent-yes)] font-medium">
                                             {getPotentialPayout(0.01, market, true).toFixed(4)} ETH
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-zinc-500">Potential payout (0.01 ETH NO)</span>
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-zinc-500">Payout (0.01 ETH NO)</span>
                                         <span className="text-[var(--accent-no)] font-medium">
                                             {getPotentialPayout(0.01, market, false).toFixed(4)} ETH
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-zinc-500 mt-2">
-                                        <Zap size={12} className="text-[var(--accent-purple)]" />
-                                        <span>Powered by Chainlink CRE + AI Resolution</span>
+                                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 mt-2">
+                                        <Zap size={10} className="text-[var(--accent-purple)]" />
+                                        <span>Chainlink CRE + AI Resolution</span>
                                     </div>
                                 </div>
                             </motion.div>
@@ -208,16 +208,16 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                     </AnimatePresence>
 
                     {/* Swipe Hint */}
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
-                        <div className="flex items-center gap-2 text-xs text-[var(--accent-no)]">
-                            <span>← Swipe NO</span>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                        <div className="flex items-center gap-1.5 text-[10px] text-[var(--accent-no)]">
+                            <span>← NO</span>
                         </div>
-                        <div className="world-id-badge text-xs flex items-center gap-1.5">
+                        <div className="world-id-badge text-[10px] flex items-center gap-1">
                             <span>🌐</span>
                             <span>1 Person = 1 Bet</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-[var(--accent-yes)]">
-                            <span>Swipe YES →</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-[var(--accent-yes)]">
+                            <span>YES →</span>
                         </div>
                     </div>
                 </div>
