@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink } from 'lucide-react'
-import { CardStack } from '@/components/CardStack'
-import { SEED_MARKETS } from '@/lib/markets'
+import { useRouter } from 'next/navigation'
+import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink, TrendingUp, ArrowRight } from 'lucide-react'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { useDemoMode } from '@/hooks/useDemoMode'
 import { Portfolio } from '@/components/Portfolio'
@@ -13,19 +12,21 @@ import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
 import { Onboarding } from '@/components/Onboarding'
 import { NotificationBanner } from '@/components/Notifications'
 import { AITrading } from '@/components/AITrading'
-import { MarketFilters } from '@/components/MarketFilters'
 import { ReferralSystem } from '@/components/ReferralSystem'
 import { TrustTransparency } from '@/components/TrustTransparency'
 import { DemoModeToggle } from '@/components/DemoModeToggle'
 
 export default function Home() {
+  const router = useRouter()
   const { user, isLoading, isInWorldApp } = useMiniKit()
   const { isDemoMode } = useDemoMode()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [aiTradingEnabled, setAiTradingEnabled] = useState(false)
 
-  const marketCount = isDemoMode ? SEED_MARKETS.length : 0
+  const openTrade = () => {
+    router.push('/trade')
+  }
 
   return (
     <>
@@ -57,7 +58,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Wallet Status - Only show when in World App */}
+        {/* Wallet Status */}
         {isInWorldApp && user.address && (
           <>
             <div className="px-4 max-w-lg mx-auto w-full mb-2">
@@ -106,13 +107,32 @@ export default function Home() {
             </div>
             <div className="stat-glow rounded-xl p-3 bg-[var(--card-bg)]">
               <p className="text-[9px] text-zinc-500 uppercase tracking-wider">Markets</p>
-              <p className="text-base font-bold text-white">{marketCount}</p>
+              <p className="text-base font-bold text-white">{isDemoMode ? '5' : '0'}</p>
             </div>
           </div>
         </div>
 
+        {/* Trade CTA - Gamified */}
+        <div className="px-4 max-w-lg mx-auto w-full mb-4">
+          <button
+            onClick={openTrade}
+            className="w-full relative overflow-hidden rounded-xl bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] p-4 group active:scale-[0.98] transition-transform"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-purple)]/80 to-[var(--accent-blue)]/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-white font-semibold text-base">Start Trading</p>
+                <p className="text-white/70 text-xs">Swipe to bet on markets</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <ArrowRight size={20} className="text-white" />
+              </div>
+            </div>
+          </button>
+        </div>
+
         {/* Features */}
-        <div className="px-4 max-w-lg mx-auto w-full">
+        <div className="px-4 max-w-lg mx-auto w-full space-y-3">
           <Portfolio />
           <Achievements />
           <AITrading isEnabled={aiTradingEnabled} onToggle={setAiTradingEnabled} />
@@ -120,35 +140,12 @@ export default function Home() {
           <TrustTransparency />
         </div>
 
-        {/* Swipe Instructions */}
-        <div className="px-4 max-w-lg mx-auto w-full mb-3">
-          <div className="flex items-center justify-center gap-4 text-[11px] text-zinc-500">
-            <span className="flex items-center gap-1">
-              <span className="text-[var(--accent-no)]">←</span> NO
-            </span>
-            <span className="text-zinc-600">swipe to bet</span>
-            <span className="flex items-center gap-1">
-              YES <span className="text-[var(--accent-yes)]">→</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Market Filters */}
-        <div className="px-4 max-w-lg mx-auto w-full mb-4">
-          <MarketFilters onFilterChange={() => {}} />
-        </div>
-
-        {/* Card Stack */}
-        <div className="flex-1 px-4 max-w-lg mx-auto w-full">
-          <CardStack isDemoMode={isDemoMode} />
-        </div>
-
         {/* Footer */}
         <motion.footer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="px-4 py-5 max-w-lg mx-auto w-full"
+          className="px-4 py-5 max-w-lg mx-auto w-full mt-4"
         >
           <div className="solid-card p-4">
             <h3 className="text-xs font-semibold text-white mb-3 flex items-center gap-2">
