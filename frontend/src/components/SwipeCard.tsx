@@ -1,11 +1,52 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
 import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining, getPotentialPayout } from '@/lib/markets'
 import { Clock, Users, TrendingUp, Shield, ChevronDown, Zap } from 'lucide-react'
 
 const SWIPE_THRESHOLD = 100
+
+// Haptic + Sound feedback hook
+function useSwipeFeedback() {
+    const audioContextRef = useRef<AudioContext | null>(null)
+
+    const playFeedback = useCallback((direction: 'yes' | 'no') => {
+        // Haptic feedback (mobile)
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(direction === 'yes' ? 30 : 20)
+        }
+
+        // Sound effect (Web Audio API - no external files)
+        try {
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+            }
+            const ctx = audioContextRef.current
+            
+            // Create oscillator for swipe sound
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            
+            osc.connect(gain)
+            gain.connect(ctx.destination)
+            
+            // Different tone for yes/no
+            osc.frequency.value = direction === 'yes' ? 880 : 440
+            osc.type = 'sine'
+            
+            gain.gain.setValueAtTime(0.15, ctx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1)
+            
+            osc.start(ctx.currentTime)
+            osc.stop(ctx.currentTime + 0.1)
+        } catch (e) {
+            // Audio not supported, ignore
+        }
+    }, [])
+
+    return playFeedback
+}
 
 interface SwipeCardProps {
     market: Market
@@ -22,14 +63,17 @@ export function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
 
     const odds = getOdds(market)
     const timeLeft = getTimeRemaining(market.endTime)
+    const playFeedback = useSwipeFeedback()
 
     const handleDragEnd = useCallback((_: any, info: PanInfo) => {
         if (info.offset.x > SWIPE_THRESHOLD) {
+            playFeedback('yes')
             onSwipe(market.id, 'yes')
         } else if (info.offset.x < -SWIPE_THRESHOLD) {
+            playFeedback('no')
             onSwipe(market.id, 'no')
         }
-    }, [market.id, onSwipe])
+    }, [market.id, onSwipe, playFeedback])
 
     return (
         <motion.div

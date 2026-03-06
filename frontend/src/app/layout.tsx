@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { MiniKitWrapper } from "@/components/MiniKitWrapper";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased bg-mesh min-h-screen`}>
-        {children}
+        <MiniKitWrapper>
+          {children}
+        </MiniKitWrapper>
       </body>
     </html>
   );

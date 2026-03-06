@@ -2,10 +2,13 @@
 
 import { CardStack } from '@/components/CardStack'
 import { SEED_MARKETS } from '@/lib/markets'
+import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { motion } from 'framer-motion'
-import { Shield, Eye, Brain, Globe, Zap, Lock } from 'lucide-react'
+import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink } from 'lucide-react'
 
 export default function Home() {
+  const { user, isLoading, isInWorldApp, verifyWorldID } = useMiniKit()
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -20,10 +23,50 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="pulse-dot" />
-          <span className="text-xs text-zinc-400">{SEED_MARKETS.length} live</span>
+          {/* World App Status */}
+          {isInWorldApp ? (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--accent-purple)]/20 border border-[var(--accent-purple)]/30">
+              <Globe size={12} className="text-[var(--accent-purple)]" />
+              <span className="text-[10px] text-[var(--accent-purple)] font-medium">World App</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 border border-white/10">
+              <span className="text-[10px] text-zinc-500">Browser</span>
+            </div>
+          )}
         </div>
       </header>
+
+      {/* Wallet / Verification Status */}
+      {isInWorldApp && user.address && (
+        <div className="px-4 max-w-lg mx-auto w-full mb-3">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5">
+            <div className="flex items-center gap-2">
+              <Wallet size={14} className="text-[var(--accent-yes)]" />
+              <span className="text-xs text-white">{formatAddress(user.address)}</span>
+              {user.isVerified && (
+                <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-yes)]/15 text-[8px] text-[var(--accent-yes)] font-medium">
+                  ✓ Verified
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-zinc-500">Gas-free</span>
+          </div>
+        </div>
+      )}
+
+      {/* Not in World App Banner */}
+      {!isInWorldApp && !isLoading && (
+        <div className="px-4 max-w-lg mx-auto w-full mb-3">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20">
+            <div>
+              <p className="text-xs text-white font-medium mb-0.5">Open in World App for best experience</p>
+              <p className="text-[10px] text-zinc-400">Gas-free bets • World ID verification • Native mobile UX</p>
+            </div>
+            <ExternalLink size={16} className="text-[var(--accent-purple)] shrink-0" />
+          </div>
+        </div>
+      )}
 
       {/* Stats Banner */}
       <div className="px-4 max-w-lg mx-auto w-full mb-4">

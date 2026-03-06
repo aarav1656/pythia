@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SwipeCard } from './SwipeCard'
 import { type Market, SEED_MARKETS } from '@/lib/markets'
-import { ThumbsUp, ThumbsDown, RotateCcw, Eye } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, RotateCcw, Eye, RefreshCw } from 'lucide-react'
 
 interface CardStackProps {
     onBet?: (marketId: number, side: 'yes' | 'no') => void
@@ -14,6 +14,29 @@ export function CardStack({ onBet }: CardStackProps) {
     const [markets, setMarkets] = useState<Market[]>([...SEED_MARKETS])
     const [swipedMarkets, setSwipedMarkets] = useState<{ market: Market; side: 'yes' | 'no' }[]>([])
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const pullStartY = useRef(0)
+
+    // Pull to refresh handler
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        pullStartY.current = e.touches[0].clientY
+    }, [])
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        const currentY = e.touches[0].clientY
+        const diff = pullStartY.current - currentY
+        
+        // If pulling down on the card area, trigger refresh
+        if (diff < -100 && markets.length > 0) {
+            setIsRefreshing(true)
+            // Simulate refresh
+            setTimeout(() => {
+                setMarkets(prev => [...prev, ...SEED_MARKETS.map(m => ({ ...m, id: m.id + Date.now() }))])
+                setIsRefreshing(false)
+            }, 1000)
+            pullStartY.current = 0 // Reset to prevent multiple triggers
+        }
+    }, [markets.length])
 
     const handleSwipe = useCallback((marketId: number, direction: 'yes' | 'no') => {
         const market = markets.find(m => m.id === marketId)
@@ -45,7 +68,23 @@ export function CardStack({ onBet }: CardStackProps) {
     const nextMarket = markets[1]
 
     return (
-        <div className="relative w-full flex flex-col items-center">
+        <div 
+            className="relative w-full flex flex-col items-center"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+        >
+            {/* Pull to refresh indicator */}
+            {isRefreshing && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-0 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--accent-purple)] text-white text-sm"
+                >
+                    <RefreshCw size={16} className="animate-spin" />
+                    Loading markets...
+                </motion.div>
+            )}
+
             {/* Card Stack Area */}
             <div className="relative w-full h-[520px] flex items-center justify-center">
                 <AnimatePresence>
