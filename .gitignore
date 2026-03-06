@@ -1,0 +1,12 @@
+contracts/coverage
+contracts/test-results
+contracts/abi
+broadcast
+out
+cache
+script
+lib
+.env
+.next
+scripts
+node_modules
