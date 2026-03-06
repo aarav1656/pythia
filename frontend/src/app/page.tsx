@@ -4,10 +4,14 @@ import { CardStack } from '@/components/CardStack'
 import { SEED_MARKETS } from '@/lib/markets'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink } from 'lucide-react'
+import { Portfolio } from '@/components/Portfolio'
+import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
 
 export default function Home() {
   const { user, isLoading, isInWorldApp, verifyWorldID } = useMiniKit()
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -86,6 +90,11 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Portfolio & Leaderboard */}
+      <div className="px-4 max-w-lg mx-auto w-full">
+        <Portfolio />
+      </div>
+
       {/* Swipe Instructions */}
       <div className="px-4 max-w-lg mx-auto w-full mb-2">
         <div className="flex items-center justify-center gap-6 text-xs text-zinc-500 float-anim">
@@ -156,6 +165,19 @@ export default function Home() {
           </span>
         </div>
       </motion.footer>
+
+      {/* Create Market FAB */}
+      <CreateMarketFAB onClick={() => setShowCreateModal(true)} />
+      
+      {/* Create Market Modal */}
+      <CreateMarketModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={(question, category) => {
+          console.log('Creating market:', question, category)
+          // In production: call contract to create market
+        }}
+      />
     </div>
   )
 }
