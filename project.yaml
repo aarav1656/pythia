@@ -1,0 +1,19 @@
+# ==========================================================================
+# PYTHIA — CRE PROJECT SETTINGS
+# ==========================================================================
+# Sybil-Resistant Private Prediction Markets
+# Chainlink CRE + World ID + Confidential HTTP + ACE + Data Feeds + CCIP
+
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia-base-1
+      url: https://sepolia.base.org
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
+
+production-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia-base-1
+      url: https://sepolia.base.org
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
