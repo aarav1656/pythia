@@ -8,10 +8,16 @@ import { useState } from 'react'
 import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink } from 'lucide-react'
 import { Portfolio } from '@/components/Portfolio'
 import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
+import { Onboarding } from '@/components/Onboarding'
 
 export default function Home() {
   const { user, isLoading, isInWorldApp, verifyWorldID } = useMiniKit()
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  return (
+    <>
+      <Onboarding />
+      <div className="min-h-screen flex flex-col">
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -178,6 +184,6 @@ export default function Home() {
           // In production: call contract to create market
         }}
       />
-    </div>
+    </>
   )
 }
