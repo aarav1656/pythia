@@ -4,10 +4,11 @@ import { useState, useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SwipeCard } from './SwipeCard'
 import { type Market, SEED_MARKETS } from '@/lib/markets'
-import { ThumbsUp, ThumbsDown, RotateCcw, Eye, RefreshCw } from 'lucide-react'
+import { useMiniKit } from '@/hooks/useMiniKit'
+import { ThumbsUp, ThumbsDown, RotateCcw, Eye, RefreshCw, Shield, Loader2 } from 'lucide-react'
 
 interface CardStackProps {
-    onBet?: (marketId: number, side: 'yes' | 'no') => void
+    onBet?: (marketId: number, side: 'yes' | 'no', proof?: string) => void
 }
 
 export function CardStack({ onBet }: CardStackProps) {
@@ -15,7 +16,11 @@ export function CardStack({ onBet }: CardStackProps) {
     const [swipedMarkets, setSwipedMarkets] = useState<{ market: Market; side: 'yes' | 'no' }[]>([])
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [isVerifying, setIsVerifying] = useState(false)
+    const [verificationError, setVerificationError] = useState<string | null>(null)
     const pullStartY = useRef(0)
+
+    const { verifyWorldID, isInWorldApp, user } = useMiniKit()
 
     // Pull to refresh handler
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -45,15 +50,38 @@ export function CardStack({ onBet }: CardStackProps) {
         setShowConfirm({ market, side: direction })
     }, [markets])
 
-    const confirmBet = useCallback(() => {
+    const confirmBet = useCallback(async () => {
         if (!showConfirm) return
         const { market, side } = showConfirm
 
-        setMarkets(prev => prev.filter(m => m.id !== market.id))
-        setSwipedMarkets(prev => [...prev, { market, side }])
-        setShowConfirm(null)
-        onBet?.(market.id, side)
-    }, [showConfirm, onBet])
+        setVerificationError(null)
+
+        // If in World App, verify World ID before placing bet
+        if (isInWorldApp) {
+            setIsVerifying(true)
+            try {
+                // Verify user is human with World ID
+                const proof = await verifyWorldID(`pythia_bet_${market.id}`)
+                
+                // Bet placed successfully with proof
+                setMarkets(prev => prev.filter(m => m.id !== market.id))
+                setSwipedMarkets(prev => [...prev, { market, side }])
+                setShowConfirm(null)
+                onBet?.(market.id, side, proof.proof)
+            } catch (e: any) {
+                console.error('World ID verification failed:', e)
+                setVerificationError(e.message || 'Verification failed')
+            } finally {
+                setIsVerifying(false)
+            }
+        } else {
+            // Fallback for browser - just place bet (for demo)
+            setMarkets(prev => prev.filter(m => m.id !== market.id))
+            setSwipedMarkets(prev => [...prev, { market, side }])
+            setShowConfirm(null)
+            onBet?.(market.id, side)
+        }
+    }, [showConfirm, onBet, isInWorldApp, verifyWorldID])
 
     const cancelBet = useCallback(() => {
         setShowConfirm(null)
@@ -197,21 +225,45 @@ export function CardStack({ onBet }: CardStackProps) {
                                 </div>
                             </div>
 
+                            {/* World ID Verification Info */}
+                            {isInWorldApp && (
+                                <div className="flex items-center gap-2 text-xs text-zinc-400 p-3 rounded-xl bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20 mb-4">
+                                    <Shield size={14} className="text-[var(--accent-purple)]" />
+                                    <span>World ID verification required</span>
+                                </div>
+                            )}
+
+                            {/* Verification Error */}
+                            {verificationError && (
+                                <div className="flex items-center gap-2 text-xs text-red-400 p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
+                                    <span>{verificationError}</span>
+                                </div>
+                            )}
+
                             <div className="flex gap-3">
                                 <button
                                     onClick={cancelBet}
-                                    className="flex-1 py-3 rounded-full border border-white/10 text-zinc-400 text-sm font-semibold hover:bg-white/5 transition-all"
+                                    disabled={isVerifying}
+                                    className="flex-1 py-3 rounded-full border border-white/10 text-zinc-400 text-sm font-semibold hover:bg-white/5 transition-all disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={confirmBet}
-                                    className={`flex-1 py-3 rounded-full text-sm font-semibold transition-all ${showConfirm.side === 'yes'
+                                    disabled={isVerifying}
+                                    className={`flex-1 py-3 rounded-full text-sm font-semibold transition-all flex items-center justify-center gap-2 ${showConfirm.side === 'yes'
                                             ? 'bg-[var(--accent-yes)] text-black hover:brightness-110'
                                             : 'bg-[var(--accent-no)] text-white hover:brightness-110'
-                                        }`}
+                                        } disabled:opacity-50`}
                                 >
-                                    Confirm {showConfirm.side.toUpperCase()}
+                                    {isVerifying ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            Verifying...
+                                        </>
+                                    ) : (
+                                        `Confirm ${showConfirm.side.toUpperCase()}`
+                                    )}
                                 </button>
                             </div>
                         </motion.div>
