@@ -128,19 +128,17 @@ export function useMiniKit() {
 
     if (txResult.finalPayload.status === 'error') {
       const payload = txResult.finalPayload as any
-      // Log full payload so it appears in Vercel function logs / browser console
       console.error('[Pythia] sendTransaction error payload:', JSON.stringify(payload, null, 2))
       const code = payload.error_code ?? payload.description ?? 'unknown'
+      const desc = payload.description ?? payload.mini_app_error_detail ?? ''
+      const debugUrl = payload.debug_url ?? ''
       if (code === 'user_rejected') throw new Error('rejected')
       if (code === 'insufficient_funds' || code === 'insufficient_balance') {
-        throw new Error('Need testnet ETH — get from World Chain Sepolia faucet')
+        throw new Error('insufficient_funds — need testnet ETH on World Chain Sepolia')
       }
-      if (code === 'simulation_failed' || code === 'simulation_reverted') {
-        const debugUrl = payload.debug_url ?? ''
-        throw new Error(`simulation_failed${debugUrl ? ` — Tenderly: ${debugUrl}` : ' — already bet on this market or market closed'}`)
-      }
-      // Throw the raw payload JSON so it shows in the error banner
-      throw new Error(`${code} — ${JSON.stringify(payload)}`)
+      // Show full detail for every other error so we can diagnose
+      const detail = [code, desc, debugUrl].filter(Boolean).join(' | ')
+      throw new Error(detail || JSON.stringify(payload).slice(0, 300))
     }
 
     return (txResult.finalPayload as any).transaction_id as string
