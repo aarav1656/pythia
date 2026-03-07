@@ -150,6 +150,33 @@ export function useMarkets() {
     return { markets, isLoading, jupiterPrices, onChainCount: onChainMarkets.length }
 }
 
+// Hook: returns Set of marketIds where the given address has already bet
+export function useUserBets(marketIds: number[], userAddress: string | null | undefined): Set<number> {
+    const contracts = (userAddress && marketIds.length > 0)
+        ? marketIds.map(id => ({
+            address: CONTRACTS.pythia as `0x${string}`,
+            abi: PYTHIA_ABI,
+            functionName: 'userHasBet' as const,
+            args: [BigInt(id), userAddress as `0x${string}`] as [bigint, `0x${string}`],
+        }))
+        : []
+
+    const { data } = useReadContracts({
+        contracts,
+        query: { enabled: !!userAddress && marketIds.length > 0 },
+    })
+
+    const alreadyBet = new Set<number>()
+    if (data) {
+        data.forEach((result, i) => {
+            if (result.status === 'success' && result.result === true) {
+                alreadyBet.add(marketIds[i])
+            }
+        })
+    }
+    return alreadyBet
+}
+
 // Hook for reading on-chain global stats
 export function useContractStats() {
     const { data, isLoading } = useReadContract({

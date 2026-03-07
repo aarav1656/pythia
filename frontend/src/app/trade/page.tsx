@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
 import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining } from '@/lib/markets'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
-import { useMarkets } from '@/hooks/useMarkets'
+import { useMarkets, useUserBets } from '@/hooks/useMarkets'
 import { Clock, Users, TrendingUp, X, Check, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -26,11 +26,13 @@ function MarketCard({
     onBet,
     haptic,
     success,
+    alreadyBet,
 }: {
     market: Market
     onBet: (market: Market, side: 'yes' | 'no') => void
     haptic: ReturnType<typeof useHaptic>
     success: boolean
+    alreadyBet: boolean
 }) {
     const x = useMotionValue(0)
     const rotate = useTransform(x, [-300, 0, 300], [-6, 0, 6])
@@ -66,24 +68,34 @@ function MarketCard({
                     BET PLACED
                 </div>
             )}
+            {alreadyBet && !success && (
+                <div style={{
+                    marginBottom: 10, padding: '8px 12px', textAlign: 'center',
+                    background: 'rgba(255,170,0,0.08)', border: '1px solid var(--neon-amber)',
+                    fontSize: 9, letterSpacing: 3, color: 'var(--neon-amber)',
+                }}>
+                    ALREADY BET — SWIPE TO NEXT MARKET
+                </div>
+            )}
 
             <motion.div
                 key={market.id}
                 style={{
                     x, rotate,
-                    border: '1px solid var(--border-dim)',
+                    border: `1px solid ${alreadyBet ? 'rgba(255,170,0,0.25)' : 'var(--border-dim)'}`,
                     background: 'var(--bg-card)',
-                    cursor: 'grab',
+                    cursor: alreadyBet ? 'default' : 'grab',
                     position: 'relative',
                     userSelect: 'none',
+                    opacity: alreadyBet ? 0.7 : 1,
                     boxShadow: '0 0 24px rgba(0,255,136,0.04)',
                     touchAction: 'pan-y',
                 }}
-                drag="x"
+                drag={alreadyBet ? false : 'x'}
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.6}
-                onDragEnd={handleDragEnd}
-                whileTap={{ cursor: 'grabbing' }}
+                onDragEnd={alreadyBet ? undefined : handleDragEnd}
+                whileTap={alreadyBet ? undefined : { cursor: 'grabbing' }}
                 initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.97 }}
@@ -178,23 +190,31 @@ function MarketCard({
 
                     <div style={{ display: 'flex', gap: 10 }}>
                         <button
-                            onClick={() => onBet(market, 'no')}
+                            onClick={() => !alreadyBet && onBet(market, 'no')}
+                            disabled={alreadyBet}
                             style={{
                                 flex: 1, padding: '12px 0', fontSize: 10, letterSpacing: 3,
-                                border: '1px solid rgba(255,34,68,0.45)', background: 'rgba(255,34,68,0.07)',
-                                color: 'var(--neon-red)', cursor: 'pointer',
+                                border: `1px solid ${alreadyBet ? 'var(--border-dim)' : 'rgba(255,34,68,0.45)'}`,
+                                background: alreadyBet ? 'transparent' : 'rgba(255,34,68,0.07)',
+                                color: alreadyBet ? 'var(--text-dim)' : 'var(--neon-red)',
+                                cursor: alreadyBet ? 'default' : 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                opacity: alreadyBet ? 0.4 : 1,
                             }}
                         >
                             <X size={11} /> NO
                         </button>
                         <button
-                            onClick={() => onBet(market, 'yes')}
+                            onClick={() => !alreadyBet && onBet(market, 'yes')}
+                            disabled={alreadyBet}
                             style={{
                                 flex: 1, padding: '12px 0', fontSize: 10, letterSpacing: 3,
-                                border: '1px solid rgba(0,255,136,0.45)', background: 'rgba(0,255,136,0.07)',
-                                color: 'var(--neon-green)', cursor: 'pointer',
+                                border: `1px solid ${alreadyBet ? 'var(--border-dim)' : 'rgba(0,255,136,0.45)'}`,
+                                background: alreadyBet ? 'transparent' : 'rgba(0,255,136,0.07)',
+                                color: alreadyBet ? 'var(--text-dim)' : 'var(--neon-green)',
+                                cursor: alreadyBet ? 'default' : 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                opacity: alreadyBet ? 0.4 : 1,
                             }}
                         >
                             <Check size={11} /> YES
@@ -214,6 +234,7 @@ export default function TradePage() {
     const router = useRouter()
     const { isInWorldApp, placeBet, walletAddress } = useMiniKit()
     const { markets, isLoading: marketsLoading } = useMarkets()
+    const alreadyBetSet = useUserBets(markets.map(m => m.id), walletAddress)
     const [currentIndex, setCurrentIndex] = useState(0)
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
     const [isBetting, setIsBetting] = useState(false)
@@ -338,6 +359,7 @@ export default function TradePage() {
                         onBet={handleBet}
                         haptic={haptic}
                         success={successIds.has(currentMarket.id)}
+                        alreadyBet={alreadyBetSet.has(currentMarket.id)}
                     />
                 </AnimatePresence>
             </div>
@@ -363,23 +385,31 @@ export default function TradePage() {
 
                 {/* Dot indicators */}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    {markets.map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => { setCurrentIndex(i); setBetError(null) }}
-                            style={{
-                                width: i === currentIndex ? 16 : 6,
-                                height: 6,
-                                borderRadius: 3,
-                                border: 'none',
-                                background: i === currentIndex ? 'var(--neon-green)' : 'var(--border-dim)',
-                                cursor: 'pointer',
-                                padding: 0,
-                                transition: 'all 0.2s',
-                                boxShadow: i === currentIndex ? '0 0 6px var(--neon-green)' : 'none',
-                            }}
-                        />
-                    ))}
+                    {markets.map((m, i) => {
+                        const done = alreadyBetSet.has(m.id) || successIds.has(m.id)
+                        const active = i === currentIndex
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => { setCurrentIndex(i); setBetError(null) }}
+                                style={{
+                                    width: active ? 16 : 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    border: 'none',
+                                    background: active
+                                        ? 'var(--neon-green)'
+                                        : done
+                                            ? 'var(--neon-amber)'
+                                            : 'var(--border-dim)',
+                                    cursor: 'pointer',
+                                    padding: 0,
+                                    transition: 'all 0.2s',
+                                    boxShadow: active ? '0 0 6px var(--neon-green)' : done ? '0 0 4px var(--neon-amber)' : 'none',
+                                }}
+                            />
+                        )
+                    })}
                 </div>
 
                 <button
