@@ -27,6 +27,12 @@ interface User {
   isInWorldApp: boolean
 }
 
+// Read wallet address from MiniKit at call time (more reliable than cached state)
+function getMiniKitAddress(): string | null {
+  const u = MiniKit.user as any
+  return u?.walletAddress ?? u?.address ?? null
+}
+
 export function useMiniKit() {
   const [user, setUser] = useState<User>({
     address: null,
@@ -43,12 +49,16 @@ export function useMiniKit() {
     const inWorldApp = MiniKit.isInstalled()
 
     if (inWorldApp) {
-      // walletAddress lives on MiniKit.user after install
-      const addr = (MiniKit.user as any)?.walletAddress
-        ?? (MiniKit.user as any)?.address
-        ?? null
+      const addr = getMiniKitAddress()
       setUser({ address: addr, isVerified: false, isInWorldApp: true })
       setIsLoading(false)
+
+      // MiniKit may populate user asynchronously — re-read after a short tick
+      const t = setTimeout(() => {
+        const addrRetry = getMiniKitAddress()
+        if (addrRetry) setUser(prev => ({ ...prev, address: addrRetry }))
+      }, 500)
+      return () => clearTimeout(t)
     } else if (isConnected && walletAddress) {
       setUser({ address: walletAddress, isVerified: false, isInWorldApp: false })
       setIsLoading(false)
@@ -78,10 +88,13 @@ export function useMiniKit() {
       throw new Error('Open in World App to place bets')
     }
 
+    // Read address fresh at call time — MiniKit may have populated it since mount
+    const currentAddress = getMiniKitAddress() ?? user.address ?? ''
+
     // ── Step 1: World ID biometric verification ──
     const verifyResult = await MiniKit.commandsAsync.verify({
       action: process.env.NEXT_PUBLIC_WLD_ACTION_ID ?? 'place-bet',
-      signal: user.address ?? '',
+      signal: currentAddress,
       verification_level: VerificationLevel.Orb,
     })
 
@@ -119,17 +132,29 @@ export function useMiniKit() {
       const payload = txResult.finalPayload as any
       const code = payload.error_code ?? payload.description ?? 'unknown'
       if (code === 'user_rejected') throw new Error('rejected')
-      if (code === 'insufficient_funds' || code === 'insufficient_balance') throw new Error('insufficient ETH — get testnet ETH from World Chain Sepolia faucet')
+      if (code === 'insufficient_funds' || code === 'insufficient_balance') {
+        throw new Error('insufficient ETH — get testnet ETH from World Chain Sepolia faucet')
+      }
+      if (code === 'simulation_failed' || code === 'simulation_reverted') {
+        const debugUrl = payload.debug_url ?? ''
+        throw new Error(`simulation_failed${debugUrl ? `\n${debugUrl}` : ''} — check contract: already bet, market closed, or wrong args`)
+      }
       throw new Error(`${code}`)
     }
 
     return (txResult.finalPayload as any).transaction_id as string
   }, [user.address])
 
+  // Expose fresh wallet address for display (reads from MiniKit live)
+  const walletAddressDisplay = MiniKit.isInstalled()
+    ? getMiniKitAddress() ?? user.address
+    : isConnected ? walletAddress ?? null : null
+
   return {
     user,
     isLoading,
     placeBet,
+    walletAddress: walletAddressDisplay,
     isInWorldApp: MiniKit.isInstalled(),
     isWalletConnected: isConnected,
     isTransactionPending: isPending,
@@ -137,7 +162,7 @@ export function useMiniKit() {
   }
 }
 
-export function formatAddress(address: string | null): string {
+export function formatAddress(address: string | null | undefined): string {
   if (!address) return ''
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
