@@ -81,20 +81,32 @@ export function useMiniKit() {
   const placeBet = useCallback(async (
     _marketId: number,
     _isYes: boolean,
-    _nullifier: string
+    _root: bigint,
+    _nullifierHash: bigint,
+    _proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
+    _betAmount: bigint
   ) => {
     try {
       if (MiniKit.isInstalled()) {
-        // Use World App - would need proper transaction encoding
-        return 'world-app-tx'
+        // World App: MiniKit.commandsAsync.sendTransaction handles World ID proof
+        // The proof params come from MiniKit.commandsAsync.verify() result
+        const result = await (MiniKit as any).commandsAsync?.sendTransaction?.({
+          transaction: [{
+            address: CONTRACTS.pythia,
+            abi: PYTHIA_ABI,
+            functionName: 'placeBet',
+            args: [BigInt(_marketId), _isYes, _root, _nullifierHash, _proof],
+            value: _betAmount.toString(),
+          }]
+        })
+        return result?.finalPayload?.transaction_id ?? 'world-app-tx'
       } else if (isConnected) {
-        // Use browser wallet
         const tx = await writeContractAsync({
           address: CONTRACTS.pythia,
           abi: PYTHIA_ABI,
           functionName: 'placeBet',
-          args: [BigInt(_marketId), _isYes, _nullifier as `0x${string}`],
-          value: BigInt(0.01 * 1e18),
+          args: [BigInt(_marketId), _isYes, _root, _nullifierHash, _proof],
+          value: _betAmount,
         })
         return tx
       } else {

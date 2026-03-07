@@ -127,7 +127,9 @@ export const PYTHIA_ABI = [
         inputs: [
             { name: 'marketId', type: 'uint256' },
             { name: 'isYes', type: 'bool' },
-            { name: 'worldIdNullifier', type: 'bytes32' },
+            { name: 'root', type: 'uint256' },
+            { name: 'nullifierHash', type: 'uint256' },
+            { name: 'proof', type: 'uint256[8]' },
         ],
         outputs: [],
     },
