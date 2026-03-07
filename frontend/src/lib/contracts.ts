@@ -145,4 +145,14 @@ export const PYTHIA_ABI = [
         inputs: [],
         outputs: [{ name: '', type: 'uint256' }],
     },
+    {
+        name: 'userHasBet',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [
+            { name: 'marketId', type: 'uint256' },
+            { name: 'user', type: 'address' },
+        ],
+        outputs: [{ name: '', type: 'bool' }],
+    },
 ] as const
