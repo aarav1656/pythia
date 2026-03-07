@@ -58,10 +58,13 @@ export default function TradePage() {
         setBetError(null)
         setIsBetting(true)
         try {
+            // Bet 0.001 ETH by default (well below maxBetPerPerson); ensures testnet users
+            // with limited ETH can still participate
+            const betAmount = Math.min(0.001, showConfirm.market.maxBetPerPerson)
             await placeBet(
                 showConfirm.market.id,
                 showConfirm.side === 'yes',
-                showConfirm.market.maxBetPerPerson,
+                betAmount,
             )
             haptic('success')
             setSwipedMarkets(prev => [...prev, { market: showConfirm.market, side: showConfirm.side }])
@@ -69,7 +72,13 @@ export default function TradePage() {
             setShowConfirm(null)
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : 'Transaction failed'
-            setBetError(msg.includes('rejected') || msg.includes('cancel') ? 'Cancelled' : msg)
+            if (msg === 'rejected') {
+                setBetError('Cancelled')
+            } else if (msg.includes('insufficient') || msg.includes('balance')) {
+                setBetError('Insufficient ETH — get testnet ETH from faucet')
+            } else {
+                setBetError(msg)
+            }
             haptic('error')
         } finally {
             setIsBetting(false)
@@ -488,14 +497,17 @@ export default function TradePage() {
                             </p>
 
                             <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                {[
-                                    { label: 'AMOUNT', value: `${showConfirm.market.maxBetPerPerson} ETH` },
-                                    {
-                                        label: 'PAYOUT',
-                                        value: `${getPotentialPayout(showConfirm.market.maxBetPerPerson, showConfirm.market, showConfirm.side === 'yes').toFixed(4)} ETH`,
-                                        highlight: true,
-                                    },
-                                ].map(({ label, value, highlight }) => (
+                                {(() => {
+                                    const betAmount = Math.min(0.001, showConfirm.market.maxBetPerPerson)
+                                    return [
+                                        { label: 'AMOUNT', value: `${betAmount} ETH` },
+                                        {
+                                            label: 'PAYOUT',
+                                            value: `${getPotentialPayout(betAmount, showConfirm.market, showConfirm.side === 'yes').toFixed(4)} ETH`,
+                                            highlight: true,
+                                        },
+                                    ]
+                                })().map(({ label, value, highlight }) => (
                                     <div key={label} style={{
                                         display: 'flex', justifyContent: 'space-between', padding: '7px 10px',
                                         background: 'rgba(0,255,136,0.025)', border: '1px solid rgba(0,255,136,0.06)',
@@ -517,8 +529,9 @@ export default function TradePage() {
                                     fontSize: 9, color: 'var(--neon-red)', textAlign: 'center',
                                     letterSpacing: 1, marginBottom: 10,
                                     textShadow: '0 0 6px rgba(255,34,68,0.5)',
+                                    lineHeight: 1.5,
                                 }}>
-                                    {betError === 'Cancelled' ? 'CANCELLED' : `ERR: ${betError.slice(0, 40)}`}
+                                    {betError === 'Cancelled' ? 'CANCELLED' : betError.slice(0, 60)}
                                 </p>
                             )}
 
