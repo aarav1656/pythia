@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Shield, Eye, Brain, Globe, Zap, Lock, Wallet, ExternalLink, ArrowRight } from 'lucide-react'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { useDemoMode } from '@/hooks/useDemoMode'
+import { useContractStats } from '@/hooks/useMarkets'
 import { Portfolio } from '@/components/Portfolio'
 import { Achievements } from '@/components/Achievements'
 import { CreateMarketModal, CreateMarketFAB } from '@/components/CreateMarket'
@@ -20,6 +21,7 @@ export default function Home() {
   const router = useRouter()
   const { user, isLoading, isInWorldApp } = useMiniKit()
   const { isDemoMode } = useDemoMode()
+  const contractStats = useContractStats()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [aiTradingEnabled, setAiTradingEnabled] = useState(false)
@@ -138,9 +140,9 @@ export default function Home() {
         <div className="px-4 max-w-lg mx-auto w-full mt-3">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {[
-              { label: 'VOLUME', value: isDemoMode ? '0.233' : '0.00', unit: 'ETH' },
-              { label: 'BETTORS', value: isDemoMode ? '47' : '0', unit: '' },
-              { label: 'MARKETS', value: isDemoMode ? '5' : '0', unit: '' },
+              { label: 'VOLUME', value: contractStats.totalVolume || (isDemoMode ? '0.233' : '0.000'), unit: 'ETH' },
+              { label: 'BETTORS', value: String(contractStats.totalBets || (isDemoMode ? 47 : 0)), unit: '' },
+              { label: 'MARKETS', value: String(contractStats.marketCount || (isDemoMode ? 5 : 0)), unit: '' },
             ].map(({ label, value, unit }) => (
               <div key={label} className="stat-glow" style={{
                 padding: '10px 12px',
