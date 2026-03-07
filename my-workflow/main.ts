@@ -78,13 +78,8 @@ type Config = z.infer<typeof configSchema>
 // ────────────────────────────────────────────────────────────────────────────
 
 function keccak256Hex(data: Buffer): string {
-    // Use Node.js crypto for keccak256
-    const { createHash } = require('crypto')
-    // ethers-style: use sha3-256 with keccak variant
-    // We approximate with a deterministic hash of the data
-    // NOTE: In production, use a proper keccak256 library. CRE runtime has Buffer and crypto.
-    const hash = createHash('sha256').update(data).digest()
-    return hash.toString('hex')
+    const { keccak256 } = require('ethers')
+    return keccak256(data).slice(2) // strip 0x prefix, return raw hex
 }
 
 function buildMerkleRoot(leaves: string[]): string {

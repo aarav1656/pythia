@@ -5,7 +5,7 @@ import { ReactNode } from "react"
 
 export function MiniKitWrapper({ children }: { children: ReactNode }) {
   return (
-    <MiniKitProvider>
+    <MiniKitProvider props={{ appId: process.env.NEXT_PUBLIC_WLD_APP_ID as string }}>
       {children}
     </MiniKitProvider>
   )
