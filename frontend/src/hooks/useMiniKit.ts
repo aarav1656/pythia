@@ -104,7 +104,11 @@ export function useMiniKit() {
     const nullifierBytes32 = `0x${nullifierBigInt.toString(16).padStart(64, '0')}` as `0x${string}`
 
     // ── Step 3: Send transaction ──
-    // Contract must be allowlisted at developer.worldcoin.org → Configuration → Advanced
+    console.log('[Pythia] sendTransaction args:', {
+      contract: CONTRACTS.pythia,
+      marketId, isYes, nullifierBytes32,
+      value: toHex(parseEther(String(betAmountEth))),
+    })
     const txResult = await MiniKit.commandsAsync.sendTransaction({
       transaction: [{
         address: CONTRACTS.pythia,
@@ -117,19 +121,19 @@ export function useMiniKit() {
 
     if (txResult.finalPayload.status === 'error') {
       const payload = txResult.finalPayload as any
+      // Log full payload so it appears in Vercel function logs / browser console
+      console.error('[Pythia] sendTransaction error payload:', JSON.stringify(payload, null, 2))
       const code = payload.error_code ?? payload.description ?? 'unknown'
       if (code === 'user_rejected') throw new Error('rejected')
-      if (code === 'invalid_contract') {
-        throw new Error('Contract not allowlisted — add 0x6158fa6bA28a664660B3beb4F8992694dbAD4fAC in developer.worldcoin.org → Configuration → Advanced')
-      }
       if (code === 'insufficient_funds' || code === 'insufficient_balance') {
         throw new Error('Need testnet ETH — get from World Chain Sepolia faucet')
       }
       if (code === 'simulation_failed' || code === 'simulation_reverted') {
         const debugUrl = payload.debug_url ?? ''
-        throw new Error(`simulation_failed — already bet on this market or market closed${debugUrl ? `\nTenderly: ${debugUrl}` : ''}`)
+        throw new Error(`simulation_failed${debugUrl ? ` — Tenderly: ${debugUrl}` : ' — already bet on this market or market closed'}`)
       }
-      throw new Error(code)
+      // Throw the raw payload JSON so it shows in the error banner
+      throw new Error(`${code} — ${JSON.stringify(payload)}`)
     }
 
     return (txResult.finalPayload as any).transaction_id as string
