@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { MiniKit, VerificationLevel } from '@worldcoin/minikit-js'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { decodeAbiParameters, parseEther, toHex } from 'viem'
+import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { parseEther, toHex } from 'viem'
 import { CONTRACTS, PYTHIA_ABI } from '@/lib/contracts'
 
 interface User {
@@ -28,8 +28,10 @@ export function useMiniKit() {
     const inWorldApp = MiniKit.isInstalled()
 
     if (inWorldApp) {
-      // walletAddress is exposed on MiniKit.user after install
-      const addr = (MiniKit.user as any)?.walletAddress ?? (MiniKit.user as any)?.address ?? null
+      // walletAddress lives on MiniKit.user after install
+      const addr = (MiniKit.user as any)?.walletAddress
+        ?? (MiniKit.user as any)?.address
+        ?? null
       setUser({ address: addr, isVerified: false, isInWorldApp: true })
       setIsLoading(false)
     } else if (isConnected && walletAddress) {
@@ -41,10 +43,16 @@ export function useMiniKit() {
   }, [isConnected, walletAddress])
 
   /**
-   * Full bet flow for World App:
-   * 1. MiniKit.commandsAsync.verify() → shows World ID biometric drawer
-   * 2. Decode ABI-encoded proof → uint256[8]
-   * 3. MiniKit.commandsAsync.sendTransaction() → shows signing sheet
+   * Bet flow in World App:
+   * 1. MiniKit.commandsAsync.verify() → World ID biometric drawer
+   * 2. Convert nullifier_hash → bytes32 for the deployed contract
+   * 3. MiniKit.commandsAsync.sendTransaction() → signing sheet
+   *
+   * NOTE: The deployed contract (0x6158fa6b...) uses the original
+   * placeBet(marketId, isYes, bytes32 worldIdNullifier) signature.
+   * The nullifier_hash from World ID verify is unique per (human × action),
+   * providing sybil resistance. On-chain ZK proof verification is in the
+   * updated Pythia.sol source — redeploy to activate it.
    */
   const placeBet = useCallback(async (
     marketId: number,
@@ -55,7 +63,7 @@ export function useMiniKit() {
       throw new Error('Open in World App to place bets')
     }
 
-    // ── STEP 1: World ID verification — opens biometric drawer ──
+    // ── Step 1: World ID biometric verification ──
     const verifyResult = await MiniKit.commandsAsync.verify({
       action: process.env.NEXT_PUBLIC_WLD_ACTION_ID ?? 'place-bet',
       signal: user.address ?? '',
@@ -63,45 +71,37 @@ export function useMiniKit() {
     })
 
     if (verifyResult.finalPayload.status === 'error') {
-      const errPayload = verifyResult.finalPayload as { error_code?: string }
-      throw new Error(`World ID failed: ${errPayload.error_code ?? 'unknown'}`)
+      const code = (verifyResult.finalPayload as any).error_code ?? 'unknown'
+      if (code === 'user_rejected') throw new Error('rejected')
+      throw new Error(`World ID failed: ${code}`)
     }
 
-    const { merkle_root, nullifier_hash, proof } = verifyResult.finalPayload as {
-      merkle_root: string
+    const { nullifier_hash } = verifyResult.finalPayload as {
       nullifier_hash: string
+      merkle_root: string
       proof: string
       status: 'success'
     }
 
-    // ── STEP 2: Decode ABI-encoded proof → uint256[8] ──
-    const unpackedProof = decodeAbiParameters(
-      [{ type: 'uint256[8]' }],
-      proof as `0x${string}`
-    )[0] as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint]
+    // ── Step 2: Convert nullifier_hash to bytes32 ──
+    // nullifier_hash is a 0x-prefixed hex string — pad to 32 bytes
+    const nullifierBytes32 = ('0x' + nullifier_hash.replace('0x', '').padStart(64, '0')) as `0x${string}`
 
-    // ── STEP 3: Send transaction — opens World App signing sheet ──
+    // ── Step 3: Send transaction via World App ──
     const txResult = await MiniKit.commandsAsync.sendTransaction({
       transaction: [{
         address: CONTRACTS.pythia,
         abi: PYTHIA_ABI,
         functionName: 'placeBet',
-        args: [
-          BigInt(marketId),
-          isYes,
-          BigInt(merkle_root),
-          BigInt(nullifier_hash),
-          unpackedProof,
-        ],
+        args: [BigInt(marketId), isYes, nullifierBytes32],
         value: toHex(parseEther(String(betAmountEth))),
       }],
     })
 
     if (txResult.finalPayload.status === 'error') {
-      const errPayload = txResult.finalPayload as { error_code?: string }
-      // user_rejected = user cancelled — don't treat as hard error
-      if (errPayload.error_code === 'user_rejected') throw new Error('rejected')
-      throw new Error(`Transaction failed: ${errPayload.error_code ?? 'unknown'}`)
+      const code = (txResult.finalPayload as any).error_code ?? 'unknown'
+      if (code === 'user_rejected') throw new Error('rejected')
+      throw new Error(`Transaction failed: ${code}`)
     }
 
     return (txResult.finalPayload as any).transaction_id as string
