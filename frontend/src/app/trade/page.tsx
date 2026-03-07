@@ -483,9 +483,12 @@ export default function TradePage() {
                             }}>
                                 {showConfirm.side.toUpperCase()} — 0.001 ETH
                             </p>
+                            <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4 }}>
+                                market #{showConfirm.market.id} | bet: {Math.min(0.001, showConfirm.market.maxBetPerPerson)} ETH | max: {showConfirm.market.maxBetPerPerson} ETH
+                            </p>
                             {walletAddress && (
                                 <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 16 }}>
-                                    from {formatAddress(walletAddress)}
+                                    from {formatAddress(walletAddress)} ({walletAddress})
                                 </p>
                             )}
                             <div style={{ display: 'flex', gap: 10 }}>
