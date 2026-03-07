@@ -6,16 +6,19 @@ import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagm
 import { parseEther, toHex } from 'viem'
 import { CONTRACTS } from '@/lib/contracts'
 
-// Minimal ABI for MiniKit — only the function being called
+// Minimal ABI for MiniKit — matches the deployed contract's placeBet signature
+// New contract (0xC1aed1a6824a534be81d22Ef11D6f2d856bAde99): 5-param with ZK proof
 const PLACE_BET_ABI = [
   {
     name: 'placeBet',
     type: 'function',
     stateMutability: 'payable',
     inputs: [
-      { name: 'marketId', type: 'uint256' },
-      { name: 'isYes', type: 'bool' },
-      { name: 'worldIdNullifier', type: 'bytes32' },
+      { name: 'marketId',      type: 'uint256' },
+      { name: 'isYes',         type: 'bool' },
+      { name: 'root',          type: 'uint256' },
+      { name: 'nullifierHash', type: 'uint256' },
+      { name: 'proof',         type: 'uint256[8]' },
     ],
     outputs: [],
   },
@@ -94,19 +97,28 @@ export function useMiniKit() {
       throw new Error(`Verification failed: ${code}`)
     }
 
-    const { nullifier_hash } = verifyResult.finalPayload as {
+    const { nullifier_hash, merkle_root, proof } = verifyResult.finalPayload as {
       nullifier_hash: string
+      merkle_root: string
+      proof: string
       status: 'success'
     }
 
-    // ── Step 2: Convert nullifier_hash → bytes32 ──
-    const nullifierBigInt = BigInt(nullifier_hash)
-    const nullifierBytes32 = `0x${nullifierBigInt.toString(16).padStart(64, '0')}` as `0x${string}`
+    // ── Step 2: Decode ZK proof fields ──
+    // World ID returns proof as a hex string of 8 packed uint256s (256 bytes total)
+    const nullifierHash = BigInt(nullifier_hash)
+    const root = BigInt(merkle_root)
+    const proofHex = proof.startsWith('0x') ? proof.slice(2) : proof
+    const proofArr = Array.from({ length: 8 }, (_, i) =>
+      BigInt('0x' + proofHex.slice(i * 64, (i + 1) * 64))
+    ) as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint]
 
     // ── Step 3: Send transaction ──
+    // Contract: 0xC1aed1a6824a534be81d22Ef11D6f2d856bAde99 (World Chain Sepolia)
+    // Must be allowlisted at developer.worldcoin.org → Configuration → Advanced
     console.log('[Pythia] sendTransaction args:', {
       contract: CONTRACTS.pythia,
-      marketId, isYes, nullifierBytes32,
+      marketId, isYes, root: root.toString(), nullifierHash: nullifierHash.toString(),
       value: toHex(parseEther(String(betAmountEth))),
     })
     const txResult = await MiniKit.commandsAsync.sendTransaction({
@@ -114,7 +126,7 @@ export function useMiniKit() {
         address: CONTRACTS.pythia,
         abi: PLACE_BET_ABI,
         functionName: 'placeBet',
-        args: [BigInt(marketId), isYes, nullifierBytes32],
+        args: [BigInt(marketId), isYes, root, nullifierHash, proofArr],
         value: toHex(parseEther(String(betAmountEth))),
       }],
     })

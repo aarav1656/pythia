@@ -493,7 +493,7 @@ contract Pythia {
 
         uint256 winningPool = market.outcome == Outcome.YES ? market.yesPool : market.noPool;
         // Only sweep if the winning side had nobody — otherwise normal claims apply
-        require(winningPool == 0, "Pythia: winning side has funds — use normal claim");
+        require(winningPool == 0, "Pythia: winning side has funds, use normal claim");
 
         uint256 totalPool = market.yesPool + market.noPool;
         require(totalPool > 0, "Pythia: nothing to withdraw");

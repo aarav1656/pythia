@@ -35,7 +35,7 @@ export const config = createConfig({
 // Update after deploying with: forge script script/Deploy.s.sol
 
 export const CONTRACTS = {
-    pythia: '0x6158fa6bA28a664660B3beb4F8992694dbAD4fAC' as `0x${string}`,
+    pythia: '0xC1aed1a6824a534be81d22Ef11D6f2d856bAde99' as `0x${string}`,
 } as const
 
 // ────────────────────────────────────────────────────────────────
@@ -125,9 +125,11 @@ export const PYTHIA_ABI = [
         type: 'function',
         stateMutability: 'payable',
         inputs: [
-            { name: 'marketId', type: 'uint256' },
-            { name: 'isYes', type: 'bool' },
-            { name: 'worldIdNullifier', type: 'bytes32' },
+            { name: 'marketId',      type: 'uint256' },
+            { name: 'isYes',         type: 'bool' },
+            { name: 'root',          type: 'uint256' },
+            { name: 'nullifierHash', type: 'uint256' },
+            { name: 'proof',         type: 'uint256[8]' },
         ],
         outputs: [],
     },
