@@ -234,6 +234,9 @@ function MarketCard({
 export default function TradePage() {
     const router = useRouter()
     const { isInWorldApp, placeBet, walletAddress } = useMiniKit()
+    const { connect, connectors } = useConnect()
+    const { isConnected } = useAccount()
+    const { disconnect } = useDisconnect()
     const { markets, isLoading: marketsLoading } = useMarkets()
     const alreadyBetSet = useUserBets(markets.map(m => m.id), walletAddress)
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -356,11 +359,36 @@ export default function TradePage() {
                 </button>
                 <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>MARKETS</span>
                 {walletAddress ? (
-                    <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1 }}>{formatAddress(walletAddress)}</span>
+                    <button
+                        onClick={() => !isInWorldApp && disconnect()}
+                        style={{ fontSize: 8, color: 'var(--neon-green)', letterSpacing: 1, background: 'none', border: '1px solid rgba(0,255,136,0.2)', padding: '4px 8px', cursor: isInWorldApp ? 'default' : 'pointer' }}
+                    >{formatAddress(walletAddress)}</button>
+                ) : !isInWorldApp ? (
+                    <button
+                        onClick={() => connectors[0] && connect({ connector: connectors[0] })}
+                        style={{
+                            fontSize: 8, letterSpacing: 2, color: 'var(--neon-green)', background: 'rgba(0,255,136,0.07)',
+                            border: '1px solid rgba(0,255,136,0.3)', padding: '4px 10px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 4,
+                        }}
+                    >
+                        <Wallet size={10} /> CONNECT
+                    </button>
                 ) : (
                     <div style={{ width: 60 }} />
                 )}
             </header>
+
+            {/* Browser mode: show connect prompt if no wallet */}
+            {!isInWorldApp && !isConnected && (
+                <div style={{
+                    margin: '0 16px 8px', padding: '10px 12px', textAlign: 'center',
+                    background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.15)',
+                    fontSize: 9, color: 'var(--neon-green)', letterSpacing: 1,
+                }}>
+                    Connect MetaMask (World Chain Sepolia) to place bets
+                </div>
+            )}
 
             {/* ─── Card area ─── */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 16px 0' }}>
