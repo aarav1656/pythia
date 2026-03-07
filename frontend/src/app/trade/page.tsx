@@ -2,10 +2,10 @@
 
 import { useState, useCallback } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
-import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining, getPotentialPayout } from '@/lib/markets'
-import { useMiniKit } from '@/hooks/useMiniKit'
+import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining } from '@/lib/markets'
+import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { useMarkets } from '@/hooks/useMarkets'
-import { Clock, Users, TrendingUp, X, Check, Loader2, Wifi, ArrowLeft } from 'lucide-react'
+import { Clock, Users, TrendingUp, X, Check, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const SWIPE_THRESHOLD = 80
@@ -20,7 +20,7 @@ function useHaptic() {
     return trigger
 }
 
-// Per-card component so each card has its own motion values that reset independently
+// Single card — motion values are local so they reset cleanly on re-render
 function MarketCard({
     market,
     onBet,
@@ -39,6 +39,7 @@ function MarketCard({
 
     const odds = getOdds(market)
     const timeLeft = getTimeRemaining(market.endTime)
+    const totalPool = (market.yesPool + market.noPool).toFixed(3)
 
     const handleDragEnd = useCallback((_: unknown, info: PanInfo) => {
         if (info.offset.x > SWIPE_THRESHOLD) {
@@ -55,10 +56,10 @@ function MarketCard({
     }, [market, onBet, haptic, x])
 
     return (
-        <div style={{ padding: '0 16px 24px' }}>
+        <div style={{ width: '100%' }}>
             {success && (
                 <div style={{
-                    marginBottom: 8, padding: '8px 12px', textAlign: 'center',
+                    marginBottom: 10, padding: '8px 12px', textAlign: 'center',
                     background: 'rgba(0,255,136,0.08)', border: '1px solid var(--neon-green)',
                     fontSize: 9, letterSpacing: 3, color: 'var(--neon-green)',
                 }}>
@@ -67,6 +68,7 @@ function MarketCard({
             )}
 
             <motion.div
+                key={market.id}
                 style={{
                     x, rotate,
                     border: '1px solid var(--border-dim)',
@@ -75,12 +77,17 @@ function MarketCard({
                     position: 'relative',
                     userSelect: 'none',
                     boxShadow: '0 0 24px rgba(0,255,136,0.04)',
+                    touchAction: 'pan-y',
                 }}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.6}
                 onDragEnd={handleDragEnd}
                 whileTap={{ cursor: 'grabbing' }}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.2 }}
             >
                 {/* YES overlay */}
                 <motion.div style={{
@@ -125,12 +132,12 @@ function MarketCard({
                     </div>
 
                     <h2 style={{
-                        fontSize: 14, lineHeight: 1.6, color: 'var(--text-primary)', marginBottom: 14,
+                        fontSize: 15, lineHeight: 1.6, color: 'var(--text-primary)', marginBottom: 18,
                         borderLeft: '2px solid var(--neon-green)', paddingLeft: 10,
                         boxShadow: '-4px 0 10px rgba(0,255,136,0.12)',
                     }}>{market.question}</h2>
 
-                    <div style={{ marginBottom: 14 }}>
+                    <div style={{ marginBottom: 16 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                             <span style={{ fontSize: 10, letterSpacing: 2, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>
                                 YES {odds.yes}%
@@ -147,7 +154,7 @@ function MarketCard({
 
                     {market.aiConfidence > 0 && (
                         <div style={{
-                            display: 'flex', justifyContent: 'space-between', padding: '5px 8px', marginBottom: 12,
+                            display: 'flex', justifyContent: 'space-between', padding: '5px 8px', marginBottom: 14,
                             background: 'rgba(0,255,136,0.03)', border: '1px solid rgba(0,255,136,0.08)',
                         }}>
                             <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1 }}>AI CONFIDENCE</span>
@@ -158,16 +165,14 @@ function MarketCard({
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Users size={10} style={{ color: 'var(--text-dim)' }} />
                             <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>{market.betCount} bets</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <TrendingUp size={10} style={{ color: 'var(--text-dim)' }} />
-                            <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>
-                                {(market.yesPool + market.noPool).toFixed(3)} ETH
-                            </span>
+                            <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>{totalPool} ETH pool</span>
                         </div>
                     </div>
 
@@ -175,7 +180,7 @@ function MarketCard({
                         <button
                             onClick={() => onBet(market, 'no')}
                             style={{
-                                flex: 1, padding: '11px 0', fontSize: 10, letterSpacing: 3,
+                                flex: 1, padding: '12px 0', fontSize: 10, letterSpacing: 3,
                                 border: '1px solid rgba(255,34,68,0.45)', background: 'rgba(255,34,68,0.07)',
                                 color: 'var(--neon-red)', cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -186,7 +191,7 @@ function MarketCard({
                         <button
                             onClick={() => onBet(market, 'yes')}
                             style={{
-                                flex: 1, padding: '11px 0', fontSize: 10, letterSpacing: 3,
+                                flex: 1, padding: '12px 0', fontSize: 10, letterSpacing: 3,
                                 border: '1px solid rgba(0,255,136,0.45)', background: 'rgba(0,255,136,0.07)',
                                 color: 'var(--neon-green)', cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -198,7 +203,7 @@ function MarketCard({
                 </div>
             </motion.div>
 
-            <p style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', marginTop: 8, letterSpacing: 2, opacity: 0.6 }}>
+            <p style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', marginTop: 10, letterSpacing: 2, opacity: 0.6 }}>
                 SWIPE RIGHT = YES / LEFT = NO
             </p>
         </div>
@@ -207,14 +212,27 @@ function MarketCard({
 
 export default function TradePage() {
     const router = useRouter()
-    const { isInWorldApp, placeBet } = useMiniKit()
-    const { markets, isLoading: marketsLoading, onChainCount } = useMarkets()
+    const { isInWorldApp, placeBet, walletAddress } = useMiniKit()
+    const { markets, isLoading: marketsLoading } = useMarkets()
+    const [currentIndex, setCurrentIndex] = useState(0)
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
     const [isBetting, setIsBetting] = useState(false)
     const [betError, setBetError] = useState<string | null>(null)
     const [successIds, setSuccessIds] = useState<Set<number>>(new Set())
 
     const haptic = useHaptic()
+
+    const currentMarket = markets[currentIndex]
+
+    const goNext = useCallback(() => {
+        setCurrentIndex(prev => Math.min(prev + 1, markets.length - 1))
+        setBetError(null)
+    }, [markets.length])
+
+    const goPrev = useCallback(() => {
+        setCurrentIndex(prev => Math.max(prev - 1, 0))
+        setBetError(null)
+    }, [])
 
     const handleBet = useCallback((market: Market, side: 'yes' | 'no') => {
         haptic('light')
@@ -233,13 +251,22 @@ export default function TradePage() {
             const id = showConfirm.market.id
             setSuccessIds(prev => new Set([...prev, id]))
             setShowConfirm(null)
-            setTimeout(() => setSuccessIds(prev => { const n = new Set(prev); n.delete(id); return n }), 4000)
+            // Auto-advance to next market after successful bet
+            setTimeout(() => {
+                setCurrentIndex(prev => Math.min(prev + 1, markets.length - 1))
+                setSuccessIds(prev => { const n = new Set(prev); n.delete(id); return n })
+            }, 1500)
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : 'Transaction failed'
             if (msg === 'rejected') {
                 setBetError('Cancelled')
             } else if (msg.includes('insufficient') || msg.includes('balance')) {
                 setBetError('Need testnet ETH — get from World Chain Sepolia faucet')
+            } else if (msg.startsWith('simulation_failed')) {
+                // Extract debug URL if present
+                const lines = msg.split('\n')
+                const url = lines[1] ?? ''
+                setBetError(url ? `Simulation failed — ${url}` : 'Simulation failed — market may be closed or already bet')
             } else {
                 setBetError(msg)
             }
@@ -247,7 +274,7 @@ export default function TradePage() {
         } finally {
             setIsBetting(false)
         }
-    }, [showConfirm, isBetting, placeBet, haptic])
+    }, [showConfirm, isBetting, placeBet, haptic, markets.length])
 
     // ─── Loading ───
     if (marketsLoading) {
@@ -262,160 +289,172 @@ export default function TradePage() {
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                     <Loader2 size={24} style={{ color: 'var(--neon-green)', animation: 'spin 1s linear infinite' }} />
                     <p style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 3 }}>LOADING MARKETS...</p>
-                    <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 2, opacity: 0.6 }}>READING ON-CHAIN DATA</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!currentMarket) {
+        return (
+            <div style={{ minHeight: '100svh', background: 'var(--bg)', fontFamily: 'var(--font-retro)', display: 'flex', flexDirection: 'column' }}>
+                <header style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border-dim)', background: 'var(--bg)' }}>
+                    <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                        <ArrowLeft size={16} style={{ color: 'var(--text-dim)' }} />
+                    </button>
+                    <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>MARKETS</span>
+                </header>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                    <p style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 3 }}>NO MARKETS AVAILABLE</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div style={{ minHeight: '100svh', background: 'var(--bg)', fontFamily: 'var(--font-retro)' }}>
+        <div style={{ minHeight: '100svh', background: 'var(--bg)', fontFamily: 'var(--font-retro)', display: 'flex', flexDirection: 'column' }}>
 
-            {/* ─── Sticky Header ─── */}
+            {/* ─── Header ─── */}
             <header style={{
-                position: 'sticky', top: 0, zIndex: 20,
                 padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                borderBottom: '1px solid var(--border-dim)', background: 'rgba(5,5,8,0.95)',
-                backdropFilter: 'blur(10px)',
+                borderBottom: '1px solid var(--border-dim)', background: 'var(--bg)',
             }}>
                 <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                     <ArrowLeft size={16} style={{ color: 'var(--text-dim)' }} />
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {onChainCount > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Wifi size={8} style={{ color: 'var(--neon-green)' }} />
-                            <span style={{ fontSize: 7, color: 'var(--neon-green)', letterSpacing: 1 }}>LIVE</span>
-                        </div>
-                    )}
-                    <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>
-                        MARKETS ({markets.length})
-                    </span>
-                </div>
-                <div style={{ width: 28 }} />
+                <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>MARKETS</span>
+                {walletAddress ? (
+                    <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1 }}>{formatAddress(walletAddress)}</span>
+                ) : (
+                    <div style={{ width: 60 }} />
+                )}
             </header>
 
-            {/* ─── Scrollable Market Feed ─── */}
-            <div style={{ paddingTop: 16, paddingBottom: 60, maxWidth: 480, margin: '0 auto' }}>
-                {markets.length === 0 ? (
-                    <div style={{ padding: '80px 16px', textAlign: 'center' }}>
-                        <p style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: 3, marginBottom: 8 }}>NO ACTIVE MARKETS</p>
-                        <p style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 2, opacity: 0.5 }}>Check back soon</p>
-                    </div>
-                ) : (
-                    markets.map((market, i) => (
-                        <div key={market.id}>
-                            <MarketCard
-                                market={market}
-                                onBet={handleBet}
-                                haptic={haptic}
-                                success={successIds.has(market.id)}
-                            />
-                            {i < markets.length - 1 && (
-                                <div style={{ height: 1, margin: '0 16px 24px', background: 'rgba(0,255,136,0.06)' }} />
-                            )}
-                        </div>
-                    ))
-                )}
+            {/* ─── Card area ─── */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 16px 0' }}>
+                <AnimatePresence mode="wait">
+                    <MarketCard
+                        key={currentMarket.id}
+                        market={currentMarket}
+                        onBet={handleBet}
+                        haptic={haptic}
+                        success={successIds.has(currentMarket.id)}
+                    />
+                </AnimatePresence>
             </div>
 
-            {/* ─── Confirm Bottom Sheet ─── */}
+            {/* ─── Navigation ─── */}
+            <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 16px 8px',
+            }}>
+                <button
+                    onClick={goPrev}
+                    disabled={currentIndex === 0}
+                    style={{
+                        background: 'none', border: '1px solid var(--border-dim)',
+                        color: currentIndex === 0 ? 'var(--text-dim)' : 'var(--text-primary)',
+                        cursor: currentIndex === 0 ? 'default' : 'pointer',
+                        padding: '6px 12px', opacity: currentIndex === 0 ? 0.3 : 1,
+                        display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, letterSpacing: 2,
+                    }}
+                >
+                    <ChevronLeft size={12} /> PREV
+                </button>
+
+                {/* Dot indicators */}
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    {markets.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => { setCurrentIndex(i); setBetError(null) }}
+                            style={{
+                                width: i === currentIndex ? 16 : 6,
+                                height: 6,
+                                borderRadius: 3,
+                                border: 'none',
+                                background: i === currentIndex ? 'var(--neon-green)' : 'var(--border-dim)',
+                                cursor: 'pointer',
+                                padding: 0,
+                                transition: 'all 0.2s',
+                                boxShadow: i === currentIndex ? '0 0 6px var(--neon-green)' : 'none',
+                            }}
+                        />
+                    ))}
+                </div>
+
+                <button
+                    onClick={goNext}
+                    disabled={currentIndex === markets.length - 1}
+                    style={{
+                        background: 'none', border: '1px solid var(--border-dim)',
+                        color: currentIndex === markets.length - 1 ? 'var(--text-dim)' : 'var(--text-primary)',
+                        cursor: currentIndex === markets.length - 1 ? 'default' : 'pointer',
+                        padding: '6px 12px', opacity: currentIndex === markets.length - 1 ? 0.3 : 1,
+                        display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, letterSpacing: 2,
+                    }}
+                >
+                    NEXT <ChevronRight size={12} />
+                </button>
+            </div>
+
+            {/* ─── Market counter ─── */}
+            <p style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', marginBottom: 8, letterSpacing: 2 }}>
+                {currentIndex + 1} / {markets.length}
+            </p>
+
+            {/* ─── Error ─── */}
+            {betError && (
+                <div style={{
+                    margin: '0 16px 12px', padding: '8px 12px',
+                    background: 'rgba(255,34,68,0.07)', border: '1px solid rgba(255,34,68,0.3)',
+                    fontSize: 9, color: 'var(--neon-red)', letterSpacing: 1,
+                    wordBreak: 'break-all',
+                }}>
+                    {betError}
+                </div>
+            )}
+
+            {/* ─── Confirm bottom sheet ─── */}
             <AnimatePresence>
                 {showConfirm && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={{
-                            position: 'fixed', inset: 0, zIndex: 50,
-                            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
-                        }}
-                        onClick={() => { if (!isBetting) { setShowConfirm(null); setBetError(null) } }}
-                    >
+                    <>
                         <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => !isBetting && setShowConfirm(null)}
+                            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 40 }}
+                        />
+                        <motion.div
+                            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                             style={{
-                                width: '100%', maxWidth: 480, padding: '24px 20px 48px',
-                                background: 'var(--bg-card)',
-                                borderTop: `1px solid ${showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'}`,
-                                boxShadow: showConfirm.side === 'yes'
-                                    ? '0 -20px 60px rgba(0,255,136,0.12)'
-                                    : '0 -20px 60px rgba(255,34,68,0.12)',
+                                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+                                background: 'var(--bg-card)', border: '1px solid var(--border-dim)',
+                                borderBottom: 'none', padding: 24,
                             }}
-                            onClick={e => e.stopPropagation()}
                         >
-                            <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 20px' }} />
-
-                            <p style={{
-                                fontSize: 16, letterSpacing: 4, textAlign: 'center', marginBottom: 6,
-                                color: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
-                                textShadow: showConfirm.side === 'yes' ? '0 0 10px var(--neon-green)' : '0 0 10px var(--neon-red)',
-                            }}>
-                                BET {showConfirm.side.toUpperCase()}?
-                            </p>
-                            <p style={{ fontSize: 10, color: 'var(--text-dim)', textAlign: 'center', letterSpacing: 1, marginBottom: 20, lineHeight: 1.6, padding: '0 16px' }}>
+                            <p style={{ fontSize: 8, letterSpacing: 3, color: 'var(--text-dim)', marginBottom: 10 }}>CONFIRM BET</p>
+                            <p style={{ fontSize: 13, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.5 }}>
                                 {showConfirm.market.question}
                             </p>
-
-                            {(() => {
-                                const betAmount = Math.min(0.001, showConfirm.market.maxBetPerPerson)
-                                return (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
-                                        {[
-                                            { label: 'AMOUNT', value: `${betAmount} ETH` },
-                                            {
-                                                label: 'POTENTIAL PAYOUT',
-                                                value: `${getPotentialPayout(betAmount, showConfirm.market, showConfirm.side === 'yes').toFixed(4)} ETH`,
-                                                highlight: true,
-                                            },
-                                        ].map(({ label, value, highlight }) => (
-                                            <div key={label} style={{
-                                                display: 'flex', justifyContent: 'space-between', padding: '8px 12px',
-                                                background: 'rgba(0,255,136,0.025)', border: '1px solid rgba(0,255,136,0.06)',
-                                            }}>
-                                                <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>{label}</span>
-                                                <span style={{
-                                                    fontSize: 9, letterSpacing: 1,
-                                                    color: highlight ? (showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)') : 'var(--text-primary)',
-                                                }}>{value}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )
-                            })()}
-
-                            {betError && (
-                                <p style={{
-                                    fontSize: 9, color: 'var(--neon-red)', textAlign: 'center',
-                                    letterSpacing: 1, marginBottom: 12, lineHeight: 1.5,
-                                }}>
-                                    {betError === 'Cancelled' ? 'CANCELLED' : betError.slice(0, 80)}
+                            <p style={{
+                                fontSize: 11, letterSpacing: 2, marginBottom: 20,
+                                color: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
+                            }}>
+                                {showConfirm.side.toUpperCase()} — 0.001 ETH
+                            </p>
+                            {walletAddress && (
+                                <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 16 }}>
+                                    from {formatAddress(walletAddress)}
                                 </p>
                             )}
-
-                            {isBetting && (
-                                <p style={{
-                                    fontSize: 9, color: 'var(--neon-green)', textAlign: 'center',
-                                    letterSpacing: 1, marginBottom: 12,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                }}>
-                                    <Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} />
-                                    {isInWorldApp ? 'VERIFYING WORLD ID...' : 'SIGNING...'}
-                                </p>
-                            )}
-
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button
-                                    onClick={() => { setShowConfirm(null); setBetError(null) }}
+                                    onClick={() => !isBetting && setShowConfirm(null)}
                                     disabled={isBetting}
                                     style={{
-                                        flex: 1, padding: '12px 0', fontSize: 10, letterSpacing: 2,
-                                        border: '1px solid var(--border-dim)', color: 'var(--text-dim)',
-                                        background: 'transparent', cursor: 'pointer', opacity: isBetting ? 0.4 : 1,
+                                        flex: 1, padding: '12px 0', fontSize: 10, letterSpacing: 3,
+                                        border: '1px solid var(--border-dim)', background: 'none',
+                                        color: 'var(--text-dim)', cursor: 'pointer',
                                     }}
                                 >
                                     CANCEL
@@ -424,22 +463,19 @@ export default function TradePage() {
                                     onClick={confirmBet}
                                     disabled={isBetting}
                                     style={{
-                                        flex: 2, padding: '12px 0', fontSize: 10, letterSpacing: 2, fontWeight: 700,
+                                        flex: 2, padding: '12px 0', fontSize: 10, letterSpacing: 3,
                                         border: `1px solid ${showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'}`,
-                                        background: isBetting ? 'transparent' : (showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'),
-                                        color: isBetting ? (showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)') : '#000',
-                                        cursor: isBetting ? 'not-allowed' : 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                        background: showConfirm.side === 'yes' ? 'rgba(0,255,136,0.1)' : 'rgba(255,34,68,0.1)',
+                                        color: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
+                                        cursor: isBetting ? 'default' : 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                     }}
                                 >
-                                    {isBetting
-                                        ? <><Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} /> SIGNING...</>
-                                        : 'CONFIRM'
-                                    }
+                                    {isBetting ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> SIGNING...</> : `BET ${showConfirm.side.toUpperCase()}`}
                                 </button>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </div>
