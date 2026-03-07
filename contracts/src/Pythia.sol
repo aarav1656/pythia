@@ -55,8 +55,9 @@ contract Pythia {
     struct Bet {
         address bettor;
         bool isYes;
-        uint256 amount;
-        uint256 nullifierHash;    // World ID nullifier (uint256 from ZK proof)
+        uint256 amount;          // net of fee — used for payout math
+        uint256 originalAmount;  // msg.value — refunded in full on INVALID
+        uint256 nullifierHash;   // World ID nullifier (uint256 from ZK proof)
         uint256 timestamp;
         bool claimed;
     }
@@ -116,6 +117,7 @@ contract Pythia {
     event WinningsClaimed(uint256 indexed marketId, address indexed bettor, uint256 payout);
     event AttestationRecorded(uint256 indexed marketId, bytes32 betsMerkleRoot, bytes32 payoutsMerkleRoot, uint256 totalPaidOut);
     event CREWorkflowUpdated(address indexed workflow);
+    event WorldIdUpdated(address indexed worldId, uint256 externalNullifier);
     event EmergencyResolved(uint256 indexed marketId, Outcome outcome, string reason);
     event FeeWithdrawn(address indexed to, uint256 amount);
 
@@ -230,6 +232,7 @@ contract Pythia {
             bettor: msg.sender,
             isYes: isYes,
             amount: betAmount,
+            originalAmount: msg.value,
             nullifierHash: nullifierHash,
             timestamp: block.timestamp,
             claimed: false
@@ -263,6 +266,8 @@ contract Pythia {
         Market storage market = markets[marketId];
         require(!market.resolved, "Pythia: already resolved");
         require(outcome != Outcome.UNRESOLVED, "Pythia: cannot resolve as unresolved");
+        // H1: Prevent CRE from resolving while betting is still open
+        require(block.timestamp >= market.resolutionTime, "Pythia: resolution time not reached");
 
         market.outcome = outcome;
         market.resolved = true;
@@ -315,7 +320,9 @@ contract Pythia {
         uint256 payout = 0;
 
         if (market.outcome == Outcome.INVALID) {
-            payout = bet.amount;
+            // Refund full original bet including the platform fee — user shouldn't
+            // pay for a market that failed to produce a valid outcome
+            payout = bet.originalAmount;
         } else {
             bool won = (market.outcome == Outcome.YES && bet.isYes) ||
                        (market.outcome == Outcome.NO && !bet.isYes);
@@ -450,11 +457,14 @@ contract Pythia {
     // ──────────────────────────────────────────────────────────────
 
     function setCREWorkflow(address _cre) external onlyOwner {
+        require(_cre != address(0), "Pythia: zero address");
         creWorkflow = _cre;
         emit CREWorkflowUpdated(_cre);
     }
 
     function setWorldId(address _worldId, uint256 _externalNullifier) external onlyOwner {
+        require(_worldId != address(0), "Pythia: zero address");
+        emit WorldIdUpdated(_worldId, _externalNullifier);
         worldId = IWorldID(_worldId);
         externalNullifier = _externalNullifier;
     }

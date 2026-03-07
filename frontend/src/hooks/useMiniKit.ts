@@ -4,7 +4,22 @@ import { useState, useEffect, useCallback } from 'react'
 import { MiniKit, VerificationLevel } from '@worldcoin/minikit-js'
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { parseEther, toHex } from 'viem'
-import { CONTRACTS, PYTHIA_ABI } from '@/lib/contracts'
+import { CONTRACTS } from '@/lib/contracts'
+
+// Minimal ABI for MiniKit — only the function being called
+const PLACE_BET_ABI = [
+  {
+    name: 'placeBet',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'marketId', type: 'uint256' },
+      { name: 'isYes', type: 'bool' },
+      { name: 'worldIdNullifier', type: 'bytes32' },
+    ],
+    outputs: [],
+  },
+] as const
 
 interface User {
   address: string | null
@@ -93,7 +108,7 @@ export function useMiniKit() {
     const txResult = await MiniKit.commandsAsync.sendTransaction({
       transaction: [{
         address: CONTRACTS.pythia,
-        abi: PYTHIA_ABI,
+        abi: PLACE_BET_ABI,
         functionName: 'placeBet',
         args: [BigInt(marketId), isYes, nullifierBytes32],
         value: toHex(parseEther(String(betAmountEth))),
