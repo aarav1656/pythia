@@ -21,7 +21,7 @@ export function CardStack({ isDemoMode = false, onBet }: CardStackProps) {
     const [verificationError, setVerificationError] = useState<string | null>(null)
     const pullStartY = useRef(0)
 
-    const { verifyWorldID, isInWorldApp, user } = useMiniKit()
+    const { placeBet, isInWorldApp, user } = useMiniKit()
 
     // Pull to refresh handler
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -57,32 +57,27 @@ export function CardStack({ isDemoMode = false, onBet }: CardStackProps) {
 
         setVerificationError(null)
 
-        // If in World App, verify World ID before placing bet
         if (isInWorldApp) {
             setIsVerifying(true)
             try {
-                // Verify user is human with World ID
-                const proof = await verifyWorldID(`pythia_bet_${market.id}`)
-                
-                // Bet placed successfully with proof
+                const betAmount = Math.min(0.001, market.maxBetPerPerson)
+                await placeBet(market.id, side === 'yes', betAmount)
                 setMarkets(prev => prev.filter(m => m.id !== market.id))
                 setSwipedMarkets(prev => [...prev, { market, side }])
                 setShowConfirm(null)
-                onBet?.(market.id, side, proof.proof)
+                onBet?.(market.id, side)
             } catch (e: any) {
-                console.error('World ID verification failed:', e)
-                setVerificationError(e.message || 'Verification failed')
+                setVerificationError(e.message || 'Transaction failed')
             } finally {
                 setIsVerifying(false)
             }
         } else {
-            // Fallback for browser - just place bet (for demo)
             setMarkets(prev => prev.filter(m => m.id !== market.id))
             setSwipedMarkets(prev => [...prev, { market, side }])
             setShowConfirm(null)
             onBet?.(market.id, side)
         }
-    }, [showConfirm, onBet, isInWorldApp, verifyWorldID])
+    }, [showConfirm, onBet, isInWorldApp, placeBet])
 
     const cancelBet = useCallback(() => {
         setShowConfirm(null)

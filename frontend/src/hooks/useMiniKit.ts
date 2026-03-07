@@ -84,8 +84,10 @@ export function useMiniKit() {
     }
 
     // ── Step 2: Convert nullifier_hash to bytes32 ──
-    // nullifier_hash is a 0x-prefixed hex string — pad to 32 bytes
-    const nullifierBytes32 = ('0x' + nullifier_hash.replace('0x', '').padStart(64, '0')) as `0x${string}`
+    // World ID returns nullifier_hash as a decimal string (e.g. "12345678901234...")
+    // BigInt() handles both decimal and 0x-prefixed hex safely
+    const nullifierBigInt = BigInt(nullifier_hash)
+    const nullifierBytes32 = `0x${nullifierBigInt.toString(16).padStart(64, '0')}` as `0x${string}`
 
     // ── Step 3: Send transaction via World App ──
     const txResult = await MiniKit.commandsAsync.sendTransaction({
@@ -99,9 +101,11 @@ export function useMiniKit() {
     })
 
     if (txResult.finalPayload.status === 'error') {
-      const code = (txResult.finalPayload as any).error_code ?? 'unknown'
+      const payload = txResult.finalPayload as any
+      const code = payload.error_code ?? payload.description ?? 'unknown'
       if (code === 'user_rejected') throw new Error('rejected')
-      throw new Error(`Transaction failed: ${code}`)
+      if (code === 'insufficient_funds' || code === 'insufficient_balance') throw new Error('insufficient ETH — get testnet ETH from World Chain Sepolia faucet')
+      throw new Error(`${code}`)
     }
 
     return (txResult.finalPayload as any).transaction_id as string
