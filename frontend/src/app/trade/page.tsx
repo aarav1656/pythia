@@ -22,12 +22,14 @@ function useHaptic() {
 
 export default function TradePage() {
     const router = useRouter()
-    const { isInWorldApp } = useMiniKit()
+    const { isInWorldApp, placeBet } = useMiniKit()
     const { markets, isLoading: marketsLoading, onChainCount } = useMarkets()
     const [currentIndex, setCurrentIndex] = useState(0)
     const [swipedMarkets, setSwipedMarkets] = useState<{ market: Market; side: 'yes' | 'no' }[]>([])
     const [expanded, setExpanded] = useState(false)
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
+    const [isBetting, setIsBetting] = useState(false)
+    const [betError, setBetError] = useState<string | null>(null)
 
     // All motion hooks at top level (required by React rules of hooks)
     const x = useMotionValue(0)
@@ -51,12 +53,28 @@ export default function TradePage() {
         }
     }, [currentMarket, haptic])
 
-    const confirmBet = useCallback(() => {
-        if (!showConfirm) return
-        setSwipedMarkets(prev => [...prev, { market: showConfirm.market, side: showConfirm.side }])
-        setCurrentIndex(prev => prev + 1)
-        setShowConfirm(null)
-    }, [showConfirm])
+    const confirmBet = useCallback(async () => {
+        if (!showConfirm || isBetting) return
+        setBetError(null)
+        setIsBetting(true)
+        try {
+            await placeBet(
+                showConfirm.market.id,
+                showConfirm.side === 'yes',
+                showConfirm.market.maxBetPerPerson,
+            )
+            haptic('success')
+            setSwipedMarkets(prev => [...prev, { market: showConfirm.market, side: showConfirm.side }])
+            setCurrentIndex(prev => prev + 1)
+            setShowConfirm(null)
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Transaction failed'
+            setBetError(msg.includes('rejected') || msg.includes('cancel') ? 'Cancelled' : msg)
+            haptic('error')
+        } finally {
+            setIsBetting(false)
+        }
+    }, [showConfirm, isBetting, placeBet, haptic])
 
     const skipMarket = useCallback(() => {
         setCurrentIndex(prev => prev + 1)
@@ -493,30 +511,61 @@ export default function TradePage() {
                                 ))}
                             </div>
 
+                            {/* Error message */}
+                            {betError && (
+                                <p style={{
+                                    fontSize: 9, color: 'var(--neon-red)', textAlign: 'center',
+                                    letterSpacing: 1, marginBottom: 10,
+                                    textShadow: '0 0 6px rgba(255,34,68,0.5)',
+                                }}>
+                                    {betError === 'Cancelled' ? 'CANCELLED' : `ERR: ${betError.slice(0, 40)}`}
+                                </p>
+                            )}
+
+                            {/* Betting status */}
+                            {isBetting && (
+                                <p style={{
+                                    fontSize: 9, color: 'var(--neon-green)', textAlign: 'center',
+                                    letterSpacing: 1, marginBottom: 10, display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', gap: 6,
+                                }}>
+                                    <Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} />
+                                    VERIFYING_WORLD_ID...
+                                </p>
+                            )}
+
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button
-                                    onClick={() => setShowConfirm(null)}
+                                    onClick={() => { setShowConfirm(null); setBetError(null) }}
+                                    disabled={isBetting}
                                     style={{
                                         flex: 1, padding: '10px 0', fontSize: 9, letterSpacing: 2,
                                         border: '1px solid var(--border-dim)', color: 'var(--text-dim)',
-                                        background: 'transparent', cursor: 'pointer', textTransform: 'uppercase',
+                                        background: 'transparent', cursor: isBetting ? 'not-allowed' : 'pointer',
+                                        textTransform: 'uppercase', opacity: isBetting ? 0.4 : 1,
                                     }}
                                 >
                                     CANCEL
                                 </button>
                                 <button
                                     onClick={confirmBet}
+                                    disabled={isBetting}
                                     style={{
                                         flex: 1, padding: '10px 0', fontSize: 9, letterSpacing: 2,
                                         border: `1px solid ${showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'}`,
-                                        background: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
-                                        color: '#000', cursor: 'pointer', textTransform: 'uppercase',
-                                        fontWeight: 700,
+                                        background: isBetting ? 'transparent' : (showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)'),
+                                        color: isBetting ? (showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)') : '#000',
+                                        cursor: isBetting ? 'not-allowed' : 'pointer',
+                                        textTransform: 'uppercase', fontWeight: 700,
                                         boxShadow: showConfirm.side === 'yes'
                                             ? '0 0 14px rgba(0,255,136,0.5)' : '0 0 14px rgba(255,34,68,0.5)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                                     }}
                                 >
-                                    CONFIRM
+                                    {isBetting
+                                        ? <><Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} /> SIGNING...</>
+                                        : 'CONFIRM'
+                                    }
                                 </button>
                             </div>
                         </motion.div>
