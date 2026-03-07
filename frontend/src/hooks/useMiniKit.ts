@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { MiniKit, VerificationLevel } from '@worldcoin/minikit-js'
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
-import { parseEther, toHex, keccak256, encodePacked } from 'viem'
+import { parseEther, toHex } from 'viem'
 import { CONTRACTS } from '@/lib/contracts'
 
 // Minimal ABI for MiniKit — only the function being called
@@ -27,18 +27,9 @@ interface User {
   isInWorldApp: boolean
 }
 
-// Read wallet address from MiniKit at call time (more reliable than cached state)
 function getMiniKitAddress(): string | null {
   const u = MiniKit.user as any
   return u?.walletAddress ?? u?.address ?? null
-}
-
-// Deterministic nullifier: keccak256(address, marketId) — unique per (user, market).
-// Used as fallback when World ID verify isn't configured or fails.
-// The deployed contract stores this bytes32 but does NOT verify the ZK proof on-chain,
-// so this still enforces 1-bet-per-market via userHasBet[marketId][msg.sender].
-function deterministicNullifier(address: string, marketId: number): `0x${string}` {
-  return keccak256(encodePacked(['address', 'uint256'], [address as `0x${string}`, BigInt(marketId)]))
 }
 
 export function useMiniKit() {
@@ -61,7 +52,6 @@ export function useMiniKit() {
       setUser({ address: addr, isVerified: false, isInWorldApp: true })
       setIsLoading(false)
 
-      // MiniKit may populate user asynchronously — re-read after a short tick
       const t = setTimeout(() => {
         const addrRetry = getMiniKitAddress()
         if (addrRetry) setUser(prev => ({ ...prev, address: addrRetry }))
@@ -84,38 +74,37 @@ export function useMiniKit() {
       throw new Error('Open in World App to place bets')
     }
 
-    // Read address fresh at call time
     const currentAddress = getMiniKitAddress() ?? user.address ?? ''
 
-    // ── Step 1: Try World ID verification (optional — contract doesn't verify ZK on-chain) ──
-    let nullifierBytes32: `0x${string}`
+    // ── Step 1: World ID verification (Device level — works without Orb scan on testnet) ──
+    // Action must be registered at developer.worldcoin.org → your app → Actions
+    // Action ID must match NEXT_PUBLIC_WLD_ACTION_ID (default: 'place-bet')
+    const verifyResult = await MiniKit.commandsAsync.verify({
+      action: process.env.NEXT_PUBLIC_WLD_ACTION_ID ?? 'place-bet',
+      signal: currentAddress,
+      verification_level: VerificationLevel.Device,
+    })
 
-    try {
-      const verifyResult = await MiniKit.commandsAsync.verify({
-        action: process.env.NEXT_PUBLIC_WLD_ACTION_ID ?? 'place-bet',
-        signal: currentAddress,
-        verification_level: VerificationLevel.Device,
-      })
-
-      if (verifyResult.finalPayload.status === 'error') {
-        const code = (verifyResult.finalPayload as any).error_code ?? 'unknown'
-        if (code === 'user_rejected') throw new Error('rejected')
-        // Verify failed for non-user reason (action not registered, etc.) — use fallback nullifier
-        nullifierBytes32 = deterministicNullifier(currentAddress, marketId)
-      } else {
-        // Verify succeeded — use the real nullifier_hash from World ID
-        const { nullifier_hash } = verifyResult.finalPayload as { nullifier_hash: string; status: 'success' }
-        const nullifierBigInt = BigInt(nullifier_hash)
-        nullifierBytes32 = `0x${nullifierBigInt.toString(16).padStart(64, '0')}`
+    if (verifyResult.finalPayload.status === 'error') {
+      const code = (verifyResult.finalPayload as any).error_code ?? 'unknown'
+      if (code === 'user_rejected') throw new Error('rejected')
+      if (code === 'action_not_found' || code === 'invalid_action') {
+        throw new Error('Action not registered — add "place-bet" action in developer.worldcoin.org → your app → Actions')
       }
-    } catch (e: unknown) {
-      // If user explicitly rejected, propagate
-      if (e instanceof Error && e.message === 'rejected') throw e
-      // Any other error (network, World App crash, unregistered action) — use fallback nullifier
-      nullifierBytes32 = deterministicNullifier(currentAddress, marketId)
+      throw new Error(`Verification failed: ${code}`)
     }
 
-    // ── Step 2: Send transaction via World App ──
+    const { nullifier_hash } = verifyResult.finalPayload as {
+      nullifier_hash: string
+      status: 'success'
+    }
+
+    // ── Step 2: Convert nullifier_hash → bytes32 ──
+    const nullifierBigInt = BigInt(nullifier_hash)
+    const nullifierBytes32 = `0x${nullifierBigInt.toString(16).padStart(64, '0')}` as `0x${string}`
+
+    // ── Step 3: Send transaction ──
+    // Contract must be allowlisted at developer.worldcoin.org → Configuration → Advanced
     const txResult = await MiniKit.commandsAsync.sendTransaction({
       transaction: [{
         address: CONTRACTS.pythia,
@@ -130,12 +119,15 @@ export function useMiniKit() {
       const payload = txResult.finalPayload as any
       const code = payload.error_code ?? payload.description ?? 'unknown'
       if (code === 'user_rejected') throw new Error('rejected')
+      if (code === 'invalid_contract') {
+        throw new Error('Contract not allowlisted — add 0x6158fa6bA28a664660B3beb4F8992694dbAD4fAC in developer.worldcoin.org → Configuration → Advanced')
+      }
       if (code === 'insufficient_funds' || code === 'insufficient_balance') {
         throw new Error('Need testnet ETH — get from World Chain Sepolia faucet')
       }
       if (code === 'simulation_failed' || code === 'simulation_reverted') {
         const debugUrl = payload.debug_url ?? ''
-        throw new Error(`simulation_failed${debugUrl ? `\n${debugUrl}` : ''} — already bet on this market or market closed`)
+        throw new Error(`simulation_failed — already bet on this market or market closed${debugUrl ? `\nTenderly: ${debugUrl}` : ''}`)
       }
       throw new Error(code)
     }
@@ -143,7 +135,6 @@ export function useMiniKit() {
     return (txResult.finalPayload as any).transaction_id as string
   }, [user.address])
 
-  // Expose fresh wallet address for display
   const walletAddressDisplay = MiniKit.isInstalled()
     ? getMiniKitAddress() ?? user.address
     : isConnected ? walletAddress ?? null : null
