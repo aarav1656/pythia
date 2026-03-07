@@ -2,15 +2,14 @@
 
 import { useState, useCallback } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
-import { type Market, SEED_MARKETS, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining, getPotentialPayout } from '@/lib/markets'
-import { useDemoMode } from '@/hooks/useDemoMode'
+import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining, getPotentialPayout } from '@/lib/markets'
 import { useMiniKit } from '@/hooks/useMiniKit'
-import { Clock, Users, TrendingUp, ChevronDown, X, Check, RotateCcw } from 'lucide-react'
+import { useMarkets } from '@/hooks/useMarkets'
+import { Clock, Users, TrendingUp, ChevronDown, X, Check, RotateCcw, Loader2, Wifi } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const SWIPE_THRESHOLD = 80
 
-// Haptic feedback
 function useHaptic() {
     const trigger = useCallback((type: 'success' | 'error' | 'light') => {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -23,14 +22,14 @@ function useHaptic() {
 
 export default function TradePage() {
     const router = useRouter()
-    const { isDemoMode } = useDemoMode()
     const { isInWorldApp } = useMiniKit()
-    const [markets] = useState<Market[]>(isDemoMode ? [...SEED_MARKETS] : [])
+    const { markets, isLoading: marketsLoading, onChainCount } = useMarkets()
     const [currentIndex, setCurrentIndex] = useState(0)
     const [swipedMarkets, setSwipedMarkets] = useState<{ market: Market; side: 'yes' | 'no' }[]>([])
     const [expanded, setExpanded] = useState(false)
     const [showConfirm, setShowConfirm] = useState<{ market: Market; side: 'yes' | 'no' } | null>(null)
 
+    // All motion hooks at top level (required by React rules of hooks)
     const x = useMotionValue(0)
     const rotate = useTransform(x, [-300, 0, 300], [-8, 0, 8])
     const yesOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
@@ -41,7 +40,8 @@ export default function TradePage() {
     const currentMarket = markets[currentIndex]
     const hasMoreMarkets = currentIndex < markets.length
 
-    const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    const handleDragEnd = useCallback((_: unknown, info: PanInfo) => {
+        if (!currentMarket) return
         if (info.offset.x > SWIPE_THRESHOLD) {
             haptic('success')
             setShowConfirm({ market: currentMarket, side: 'yes' })
@@ -61,6 +61,26 @@ export default function TradePage() {
     const skipMarket = useCallback(() => {
         setCurrentIndex(prev => prev + 1)
     }, [])
+
+    // ─── Loading state ───
+    if (marketsLoading) {
+        return (
+            <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)', fontFamily: 'var(--font-retro)' }}>
+                <header className="w-full px-4 py-3 flex items-center justify-between max-w-lg mx-auto border-b border-[var(--border-dim)]">
+                    <button onClick={() => router.back()} style={{ padding: 6 }}>
+                        <X size={18} style={{ color: 'var(--text-dim)' }} />
+                    </button>
+                    <span style={{ fontSize: 11, letterSpacing: 4, color: 'var(--neon-green)', textShadow: '0 0 6px var(--neon-green)' }}>TRADE</span>
+                    <div style={{ width: 30 }} />
+                </header>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                    <Loader2 size={28} style={{ color: 'var(--neon-green)', animation: 'spin 1s linear infinite' }} />
+                    <p style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 3 }}>LOADING_MARKETS...</p>
+                    <p style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 2 }}>READING_ON-CHAIN_DATA</p>
+                </div>
+            </div>
+        )
+    }
 
     // ─── Empty state ───
     if (!hasMoreMarkets) {
@@ -82,7 +102,6 @@ export default function TradePage() {
                         border: '1px solid var(--border-dim)', background: 'var(--bg-card)',
                         position: 'relative',
                     }}>
-                        {/* Corner accents */}
                         <span style={{ position: 'absolute', top: 6, left: 6, width: 12, height: 12, borderTop: '1px solid var(--neon-green)', borderLeft: '1px solid var(--neon-green)' }} />
                         <span style={{ position: 'absolute', top: 6, right: 6, width: 12, height: 12, borderTop: '1px solid var(--neon-green)', borderRight: '1px solid var(--neon-green)' }} />
                         <span style={{ position: 'absolute', bottom: 6, left: 6, width: 12, height: 12, borderBottom: '1px solid var(--neon-green)', borderLeft: '1px solid var(--neon-green)' }} />
@@ -134,6 +153,13 @@ export default function TradePage() {
                     <X size={18} style={{ color: 'var(--text-dim)' }} />
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {/* On-chain indicator */}
+                    {onChainCount > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Wifi size={8} style={{ color: 'var(--neon-green)' }} />
+                            <span style={{ fontSize: 7, color: 'var(--neon-green)', letterSpacing: 1 }}>LIVE</span>
+                        </div>
+                    )}
                     {/* Segmented progress */}
                     <div style={{ display: 'flex', gap: 3 }}>
                         {markets.slice(0, 5).map((_, i) => (
@@ -172,6 +198,7 @@ export default function TradePage() {
                     style={{ width: '100%', maxWidth: 360 }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
+                    key={currentIndex}
                 >
                     <motion.div
                         style={{
@@ -284,6 +311,23 @@ export default function TradePage() {
                                 </div>
                             </div>
 
+                            {/* AI Confidence (from Jupiter prices) */}
+                            {market.aiConfidence > 0 && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '5px 8px', marginBottom: 12,
+                                    background: 'rgba(0,255,136,0.03)', border: '1px solid rgba(0,255,136,0.08)',
+                                }}>
+                                    <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1 }}>AI_CONFIDENCE</span>
+                                    <span style={{
+                                        fontSize: 9, letterSpacing: 1,
+                                        color: market.aiConfidence > 60 ? 'var(--neon-green)' : market.aiConfidence < 40 ? 'var(--neon-red)' : 'var(--neon-amber)',
+                                    }}>
+                                        {market.aiConfidence}% YES
+                                    </span>
+                                </div>
+                            )}
+
                             {/* Stats */}
                             <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -293,7 +337,7 @@ export default function TradePage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     <TrendingUp size={10} style={{ color: 'var(--text-dim)' }} />
                                     <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>
-                                        {(market.yesPool + market.noPool).toFixed(2)} ETH
+                                        {(market.yesPool + market.noPool).toFixed(3)} ETH
                                     </span>
                                 </div>
                             </div>
@@ -318,6 +362,7 @@ export default function TradePage() {
                                         { label: 'MAX_BET', value: `${market.maxBetPerPerson} ETH`, color: 'var(--text-primary)' },
                                         { label: 'PAYOUT_YES', value: `${getPotentialPayout(market.maxBetPerPerson, market, true).toFixed(4)} ETH`, color: 'var(--neon-green)' },
                                         { label: 'PAYOUT_NO', value: `${getPotentialPayout(market.maxBetPerPerson, market, false).toFixed(4)} ETH`, color: 'var(--neon-red)' },
+                                        { label: 'SOURCE', value: onChainCount > 0 ? 'ON-CHAIN' : 'SEED', color: 'var(--text-dim)' },
                                     ].map(({ label, value, color }) => (
                                         <div key={label} style={{
                                             display: 'flex', justifyContent: 'space-between',
@@ -404,7 +449,6 @@ export default function TradePage() {
                             }}
                             onClick={e => e.stopPropagation()}
                         >
-                            {/* Corner accents */}
                             {['top-3 left-3 border-t border-l', 'top-3 right-3 border-t border-r', 'bottom-3 left-3 border-b border-l', 'bottom-3 right-3 border-b border-r'].map((cls, i) => (
                                 <span key={i} className={`absolute ${cls} w-3 h-3`} style={{
                                     borderColor: showConfirm.side === 'yes' ? 'var(--neon-green)' : 'var(--neon-red)',
