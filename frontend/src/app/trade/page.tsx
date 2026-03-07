@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
 import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining } from '@/lib/markets'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
@@ -242,6 +242,17 @@ export default function TradePage() {
     const [successIds, setSuccessIds] = useState<Set<number>>(new Set())
 
     const haptic = useHaptic()
+    const jumpedRef = useRef(false)
+
+    // Once wallet + bet data loads, jump to first fresh market automatically
+    useEffect(() => {
+        if (jumpedRef.current || !walletAddress || markets.length === 0) return
+        // alreadyBetSet from useReadContracts: size>0 means data loaded, or empty means no bets
+        // Either way, once wallet is known, find first fresh market
+        const firstFresh = markets.findIndex(m => !alreadyBetSet.has(m.id))
+        if (firstFresh > 0) setCurrentIndex(firstFresh)
+        jumpedRef.current = true
+    }, [walletAddress, alreadyBetSet, markets])
 
     const currentMarket = markets[currentIndex]
 
