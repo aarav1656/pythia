@@ -26,13 +26,14 @@ import { z } from 'zod'
 // ██         ██       ██    ██   ██ ██ ██   ██
 //
 // Sybil-Resistant Private Prediction Markets
-// CRE Workflow — Uses 6 Chainlink Capabilities:
-//   1. CRE (Runtime Environment) — Workflow orchestration
-//   2. CRE Secrets — TEE-protected API keys via runtime.getSecret()
-//   3. Confidential HTTP — World ID verification + event data sources
-//   4. Chainlink Confidential Compute (ACE) — Private bet/payout transfers
-//   5. Data Feeds — ETH/USD price conversion
-//   6. CCIP — Cross-chain market participation
+// CRE Workflow — Chainlink Capabilities:
+//   Implemented:
+//     1. CRE (Runtime Environment) — Workflow orchestration
+//     2. CRE Secrets — TEE-protected API keys via runtime.getSecret()
+//     3. Confidential HTTP — Event data sources + AI resolution
+//   Roadmap:
+//     4. Chainlink ACE — Private bet/payout transfers (not yet deployed)
+//     5. CCIP — Cross-chain market participation (architecture planned)
 // ════════════════════════════════════════════════════════════════════════════════
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -540,8 +541,8 @@ function onCron(runtime: Runtime<Config>, _payload: CronPayload): string {
     const evmClient = getEvmClient(config.chainName)
 
     runtime.log('═══════════════════════════════════════════════════════')
-    runtime.log('  PYTHIA — Sybil-Resistant Private Prediction Markets')
-    runtime.log('  "Every person matters equally. Your bets stay private."')
+    runtime.log('  PYTHIA — Sybil-Resistant AI Prediction Markets')
+    runtime.log('  "Every person matters equally. 1 human = 1 bet."')
     runtime.log(`  Chain: ${config.chainName}`)
     runtime.log(`  Time: ${new Date().toISOString()}`)
     runtime.log('═══════════════════════════════════════════════════════')
@@ -794,20 +795,18 @@ function onCron(runtime: Runtime<Config>, _payload: CronPayload): string {
     runtime.log('  SYBIL RESISTANCE:')
     runtime.log('    World ID:          VERIFIED (1 person = 1 bet per market)')
     runtime.log('    Bet caps:          ENFORCED (equal participation, no whales)')
-    runtime.log('  PRIVACY STATUS:')
-    runtime.log('    Bet amounts:       PRIVATE (ACE private transfers)')
-    runtime.log('    Bet positions:     NOT ON-CHAIN (hidden via ACE)')
-    runtime.log('    Payout amounts:    PRIVATE (ACE private transfers)')
-    runtime.log('    API credentials:   PROTECTED (CRE Secrets)')
-    runtime.log('    Event data:        CONFIDENTIAL (fetched via Confidential HTTP)')
+    runtime.log('  DATA SOURCES:')
+    runtime.log('    API credentials:   PROTECTED (CRE Secrets / TEE)')
+    runtime.log('    Event data:        FETCHED (Confidential HTTP)')
+    runtime.log('    Bet positions:     PUBLIC (visible on-chain via BetPlaced event)')
+    runtime.log('    Privacy (ACE):     ROADMAP — not yet implemented')
     runtime.log('  ─────────────────────────────────────────────────────')
     runtime.log('  Chainlink Capabilities Used:')
     runtime.log('    1. CRE Runtime Environment    — Workflow orchestration')
     runtime.log('    2. CRE Secrets                — TEE-protected API keys')
-    runtime.log('    3. Confidential HTTP           — World ID + event data + AI')
-    runtime.log('    4. Confidential Compute (ACE)  — Private bets + payouts')
-    runtime.log('    5. Data Feeds                  — ETH/USD price')
-    runtime.log('    6. CCIP                        — Cross-chain market participation')
+    runtime.log('    3. Confidential HTTP           — Event data + AI resolution')
+    runtime.log('    [Roadmap] ACE                 — Private bet/payout transfers')
+    runtime.log('    [Roadmap] CCIP                — Cross-chain market participation')
     runtime.log('═══════════════════════════════════════════════════════')
 
     return 'Pythia prediction market cycle complete'
