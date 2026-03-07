@@ -1,4 +1,5 @@
 import { http, createConfig } from 'wagmi'
+import { injected } from 'wagmi/connectors'
 import { defineChain } from 'viem'
 
 // ────────────────────────────────────────────────────────────────
@@ -24,6 +25,7 @@ export const worldChainSepolia = defineChain({
 
 export const config = createConfig({
     chains: [worldChainSepolia],
+    connectors: [injected()],
     transports: {
         [worldChainSepolia.id]: http('https://worldchain-sepolia.gateway.tenderly.co'),
     },

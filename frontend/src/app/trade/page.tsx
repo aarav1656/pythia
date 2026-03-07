@@ -5,7 +5,8 @@ import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from '
 import { type Market, CATEGORY_COLORS, CATEGORY_ICONS, getOdds, getTimeRemaining } from '@/lib/markets'
 import { useMiniKit, formatAddress } from '@/hooks/useMiniKit'
 import { useMarkets, useUserBets } from '@/hooks/useMarkets'
-import { Clock, Users, TrendingUp, X, Check, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useConnect, useAccount, useDisconnect } from 'wagmi'
+import { Clock, Users, TrendingUp, X, Check, Loader2, ArrowLeft, ChevronLeft, ChevronRight, Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const SWIPE_THRESHOLD = 80
