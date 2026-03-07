@@ -107,6 +107,9 @@ contract Pythia {
     uint256 public resolvedMarkets;
     uint256 public collectedFees;
 
+    // Reentrancy guard
+    bool private _locked;
+
     // ──────────────────────────────────────────────────────────────
     //  EVENTS
     // ──────────────────────────────────────────────────────────────
@@ -128,6 +131,7 @@ contract Pythia {
     modifier onlyOwner() { require(msg.sender == owner, "Pythia: not owner"); _; }
     modifier onlyCRE() { require(msg.sender == creWorkflow, "Pythia: not CRE workflow"); _; }
     modifier marketExists(uint256 marketId) { require(marketId < marketCount, "Pythia: market does not exist"); _; }
+    modifier nonReentrant() { require(!_locked, "Pythia: reentrant call"); _locked = true; _; _locked = false; }
 
     // ──────────────────────────────────────────────────────────────
     //  CONSTRUCTOR
@@ -199,12 +203,12 @@ contract Pythia {
         uint256 root,
         uint256 nullifierHash,
         uint256[8] calldata proof
-    ) external payable marketExists(marketId) {
+    ) external payable nonReentrant marketExists(marketId) {
         Market storage market = markets[marketId];
 
         require(block.timestamp < market.endTime, "Pythia: betting closed");
         require(!market.resolved, "Pythia: market already resolved");
-        require(msg.value > 0, "Pythia: bet must be positive");
+        require(msg.value >= 0.001 ether, "Pythia: minimum bet 0.001 ETH");
         require(msg.value <= market.maxBetPerPerson, "Pythia: exceeds max bet per person");
 
         // ── WORLD ID ZK PROOF VERIFICATION (on-chain) ──
@@ -307,7 +311,7 @@ contract Pythia {
     //  CLAIM WINNINGS
     // ──────────────────────────────────────────────────────────────
 
-    function claimWinnings(uint256 marketId) external marketExists(marketId) {
+    function claimWinnings(uint256 marketId) external nonReentrant marketExists(marketId) {
         Market storage market = markets[marketId];
         require(market.resolved, "Pythia: market not resolved");
         require(userHasBet[marketId][msg.sender], "Pythia: no bet placed");
@@ -476,6 +480,30 @@ contract Pythia {
         (bool success, ) = payable(to).call{value: amount}("");
         require(success, "Pythia: fee withdrawal failed");
         emit FeeWithdrawn(to, amount);
+    }
+
+    /// @notice Rescue funds permanently locked in a market where the winning side had zero bettors.
+    /// @dev    This happens when outcome=YES but yesPool==0 (no YES bettors), making the noPool
+    ///         unclaimable. Callable by owner only after 7 days post-resolution.
+    function withdrawUnclaimed(uint256 marketId, address to) external onlyOwner marketExists(marketId) {
+        Market storage market = markets[marketId];
+        require(market.resolved, "Pythia: not resolved");
+        require(block.timestamp >= market.resolutionTime + 7 days, "Pythia: 7-day claim window not elapsed");
+        require(to != address(0), "Pythia: zero address");
+
+        uint256 winningPool = market.outcome == Outcome.YES ? market.yesPool : market.noPool;
+        // Only sweep if the winning side had nobody — otherwise normal claims apply
+        require(winningPool == 0, "Pythia: winning side has funds — use normal claim");
+
+        uint256 totalPool = market.yesPool + market.noPool;
+        require(totalPool > 0, "Pythia: nothing to withdraw");
+
+        // Zero pools before transfer to prevent double-sweep
+        market.yesPool = 0;
+        market.noPool = 0;
+
+        (bool success, ) = payable(to).call{value: totalPool}("");
+        require(success, "Pythia: rescue transfer failed");
     }
 
     // ──────────────────────────────────────────────────────────────
