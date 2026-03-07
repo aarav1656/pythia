@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { MiniKit } from '@worldcoin/minikit-js'
+import { MiniKit, VerificationLevel } from '@worldcoin/minikit-js'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { decodeAbiParameters, parseEther, toHex } from 'viem'
 import { CONTRACTS, PYTHIA_ABI } from '@/lib/contracts'
 
 interface User {
@@ -18,135 +19,97 @@ export function useMiniKit() {
     isInWorldApp: false,
   })
   const [isLoading, setIsLoading] = useState(true)
-  
-  // Wagmi hooks for browser wallet
+
   const { address: walletAddress, isConnected } = useAccount()
   const { writeContractAsync, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash })
 
   useEffect(() => {
-    // Check if running in World App
     const inWorldApp = MiniKit.isInstalled()
-    setUser(prev => ({ ...prev, isInWorldApp: inWorldApp }))
 
     if (inWorldApp) {
-      // Get user info from World App
-      const checkUser = async () => {
-        try {
-          const address = (MiniKit.user as any)?.address
-          setUser({
-            address: address ?? null,
-            isVerified: false, // MiniKit doesn't expose this directly
-            isInWorldApp: true,
-          })
-        } catch (e) {
-          console.error('Failed to get user info:', e)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-      checkUser()
+      // walletAddress is exposed on MiniKit.user after install
+      const addr = (MiniKit.user as any)?.walletAddress ?? (MiniKit.user as any)?.address ?? null
+      setUser({ address: addr, isVerified: false, isInWorldApp: true })
+      setIsLoading(false)
     } else if (isConnected && walletAddress) {
-      // Browser wallet connected
-      setUser({
-        address: walletAddress,
-        isVerified: false,
-        isInWorldApp: false,
-      })
+      setUser({ address: walletAddress, isVerified: false, isInWorldApp: false })
       setIsLoading(false)
     } else {
       setIsLoading(false)
     }
   }, [isConnected, walletAddress])
 
-  const verifyWorldID = useCallback(async (_action: string) => {
-    if (!MiniKit.isInstalled()) {
-      throw new Error('MiniKit not installed - must open in World App')
-    }
-
-    try {
-      // MiniKit verification - returns a proof
-      const payload = await (MiniKit as any).verify?.({
-        action: _action,
-        signal: 'bet',
-      })
-      
-      return { proof: payload }
-    } catch (e) {
-      console.error('World ID verification failed:', e)
-      throw e
-    }
-  }, [])
-
+  /**
+   * Full bet flow for World App:
+   * 1. MiniKit.commandsAsync.verify() → shows World ID biometric drawer
+   * 2. Decode ABI-encoded proof → uint256[8]
+   * 3. MiniKit.commandsAsync.sendTransaction() → shows signing sheet
+   */
   const placeBet = useCallback(async (
-    _marketId: number,
-    _isYes: boolean,
-    _root: bigint,
-    _nullifierHash: bigint,
-    _proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
-    _betAmount: bigint
-  ) => {
-    try {
-      if (MiniKit.isInstalled()) {
-        // World App: MiniKit.commandsAsync.sendTransaction handles World ID proof
-        // The proof params come from MiniKit.commandsAsync.verify() result
-        const result = await (MiniKit as any).commandsAsync?.sendTransaction?.({
-          transaction: [{
-            address: CONTRACTS.pythia,
-            abi: PYTHIA_ABI,
-            functionName: 'placeBet',
-            args: [BigInt(_marketId), _isYes, _root, _nullifierHash, _proof],
-            value: _betAmount.toString(),
-          }]
-        })
-        return result?.finalPayload?.transaction_id ?? 'world-app-tx'
-      } else if (isConnected) {
-        const tx = await writeContractAsync({
-          address: CONTRACTS.pythia,
-          abi: PYTHIA_ABI,
-          functionName: 'placeBet',
-          args: [BigInt(_marketId), _isYes, _root, _nullifierHash, _proof],
-          value: _betAmount,
-        })
-        return tx
-      } else {
-        throw new Error('No wallet connected')
-      }
-    } catch (e) {
-      console.error('Bet failed:', e)
-      throw e
-    }
-  }, [isConnected, writeContractAsync])
-
-  const sendTransaction = useCallback(async (
-    _to: string,
-    _value: string,
-    _data?: string
+    marketId: number,
+    isYes: boolean,
+    betAmountEth: number,
   ) => {
     if (!MiniKit.isInstalled()) {
-      throw new Error('MiniKit not installed')
+      throw new Error('Open in World App to place bets')
     }
 
-    try {
-      const result = await (MiniKit as any).sendTransaction?.({
-        transaction: [{
-          to: _to,
-          value: _value,
-          data: _data ?? '0x',
-        }]
-      })
-      return result
-    } catch (e) {
-      console.error('Transaction failed:', e)
-      throw e
+    // ── STEP 1: World ID verification — opens biometric drawer ──
+    const verifyResult = await MiniKit.commandsAsync.verify({
+      action: process.env.NEXT_PUBLIC_WLD_ACTION_ID ?? 'place-bet',
+      signal: user.address ?? '',
+      verification_level: VerificationLevel.Orb,
+    })
+
+    if (verifyResult.finalPayload.status === 'error') {
+      const errPayload = verifyResult.finalPayload as { error_code?: string }
+      throw new Error(`World ID failed: ${errPayload.error_code ?? 'unknown'}`)
     }
-  }, [])
+
+    const { merkle_root, nullifier_hash, proof } = verifyResult.finalPayload as {
+      merkle_root: string
+      nullifier_hash: string
+      proof: string
+      status: 'success'
+    }
+
+    // ── STEP 2: Decode ABI-encoded proof → uint256[8] ──
+    const unpackedProof = decodeAbiParameters(
+      [{ type: 'uint256[8]' }],
+      proof as `0x${string}`
+    )[0] as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint]
+
+    // ── STEP 3: Send transaction — opens World App signing sheet ──
+    const txResult = await MiniKit.commandsAsync.sendTransaction({
+      transaction: [{
+        address: CONTRACTS.pythia,
+        abi: PYTHIA_ABI,
+        functionName: 'placeBet',
+        args: [
+          BigInt(marketId),
+          isYes,
+          BigInt(merkle_root),
+          BigInt(nullifier_hash),
+          unpackedProof,
+        ],
+        value: toHex(parseEther(String(betAmountEth))),
+      }],
+    })
+
+    if (txResult.finalPayload.status === 'error') {
+      const errPayload = txResult.finalPayload as { error_code?: string }
+      // user_rejected = user cancelled — don't treat as hard error
+      if (errPayload.error_code === 'user_rejected') throw new Error('rejected')
+      throw new Error(`Transaction failed: ${errPayload.error_code ?? 'unknown'}`)
+    }
+
+    return (txResult.finalPayload as any).transaction_id as string
+  }, [user.address])
 
   return {
     user,
     isLoading,
-    verifyWorldID,
-    sendTransaction,
     placeBet,
     isInWorldApp: MiniKit.isInstalled(),
     isWalletConnected: isConnected,
@@ -155,7 +118,6 @@ export function useMiniKit() {
   }
 }
 
-// Helper to format address
 export function formatAddress(address: string | null): string {
   if (!address) return ''
   return `${address.slice(0, 6)}...${address.slice(-4)}`
