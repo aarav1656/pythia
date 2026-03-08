@@ -1,6 +1,6 @@
 {
     "schedule": "*/60 * * * * *",
-    "chainName": "ethereum-testnet-sepolia-worldchain-1",
+    "chainName": "ethereum-testnet-sepolia-base-1",
     "pythiaContract": "0x6158fa6bA28a664660B3beb4F8992694dbAD4fAC",
     "worldId": {
         "appId": "app_staging_pythia",
